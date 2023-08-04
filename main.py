@@ -37,5 +37,15 @@ if st.button("Motivate Me!"):
 
     # Play the audio in the Streamlit app
     st.audio(audio_path)
+    
+    # Provide a download button for the audio file
+    with open(audio_path, 'rb') as file:
+        file_bytes = file.read()
+        st.download_button(
+            label="Download Motivation Speech",
+            data=file_bytes,
+            file_name="motivation-speech.mp3",
+            mime="audio/mpeg"
+        )
 
 # Add similar blocks for the rest of the tables

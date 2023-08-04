@@ -3,3 +3,6 @@ sqlalchemy
 openai
 langchain
 python-dotenv
+boto3
+pydub
+ffmpeg

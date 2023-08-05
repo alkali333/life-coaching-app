@@ -13,11 +13,11 @@ class GoalsAndDreams(Base):
     name = Column(String)
     description = Column(String)
 
-class CurrentProjects(Base):
-    __tablename__ = 'current_projects'
+class CurrentTasks(Base):
+    __tablename__ = 'current_tasks'
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    description = Column(String)
+    entry = Column(String)
+    date = Column(Date)
 
 class SkillsAndVirtues(Base):
     __tablename__ = 'skills_and_virtues'

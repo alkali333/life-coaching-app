@@ -5,7 +5,7 @@ import boto3
 import os
 import io
 
-def text_to_speech(text, file_name):
+def text_to_speech(text, file_name, speed=100):
 
     # Maximum character limit for Polly
     MAX_CHAR_LIMIT = 3000
@@ -20,7 +20,7 @@ def text_to_speech(text, file_name):
         sanitized_part = escape(part, {"'": "&apos;", '"': "&quot;"})
 
         # Wrap the sanitized text in SSML with a prosody tag to set the rate
-        ssml_part = f"<speak><prosody rate='75%'>{sanitized_part}</prosody></speak>"
+        ssml_part = f"<speak><prosody rate='{speed}%'>{sanitized_part}</prosody></speak>"
 
         # Create a Polly client
         polly_client = boto3.Session(

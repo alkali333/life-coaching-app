@@ -5,21 +5,9 @@ from langchain.chains import LLMChain
 
 
 
-def motivate_hopes_and_dreams():
-    # Create a session for the database
-    db_session = SessionLocal()
-
-    # Query all the Goals and Dreams
-    goals_and_dreams = db_session.query(GoalsAndDreams).all()
-
-    # Format the Goals and Dreams into the desired string
-    formatted_string = ', '.join([f'{goal.name}: {goal.description}' for goal in goals_and_dreams])
-
-    # Close the database session
-    db_session.close()
-
+def create_motivational_text(user_info):
     prompt_template = """\
-    You are a life coach, come up with a visualisation exercise to the user reach the following goals
+    You are a life coach, come up with a visualisation exercise to the user reach the following goals. Pure prose, no headings or section numbers. 
     {goals}
     """
 
@@ -30,5 +18,5 @@ def motivate_hopes_and_dreams():
     llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=1)
     
     chain = LLMChain(llm=llm, prompt=prompt)
-    return chain.run(formatted_string)
+    return chain.run(user_info)
 

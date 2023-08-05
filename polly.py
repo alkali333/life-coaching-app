@@ -1,31 +1,5 @@
-# import boto3
-# import os
-
-# def text_to_speech(text):
-#     # Create a Polly client
-#     polly_client = boto3.Session(
-#         aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-#         aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-#         region_name='ap-southeast-1').client('polly')
-
-#     # Wrap the input text with SSML to set the rate at 75%
-#     ssml_text = f'<speak><prosody rate="75%">{text}</prosody></speak>'
-
-#     # Request speech synthesis
-#     response = polly_client.synthesize_speech(
-#         Text=ssml_text,
-#         TextType='ssml', # Make sure to set the TextType to 'ssml'
-#         OutputFormat='mp3',
-#         VoiceId='Emma')
-
-#     # Save the audio to a file
-#     audio_path = 'speech.mp3'
-#     with open(audio_path, 'wb') as file:
-#         file.write(response['AudioStream'].read())
-    
-#     return audio_path
-
 from xml.sax.saxutils import escape
+from botocore.exceptions import ClientError
 from pydub import AudioSegment
 import boto3
 import os
@@ -54,15 +28,21 @@ def text_to_speech(text, file_name):
             aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
             region_name='ap-southeast-1').client('polly')
 
-        # Request speech synthesis using SSML
-        response = polly_client.synthesize_speech(
-            Text=ssml_part,
-            OutputFormat='mp3',
-            VoiceId='Emma',
-            TextType='ssml',  # Set the text type to SSML
-            Engine="neural",
-            LanguageCode="en-GB"
-        )
+        try:
+            # Request speech synthesis using SSML
+            response = polly_client.synthesize_speech(
+                Text=ssml_part,
+                OutputFormat='mp3',
+                VoiceId='Emma',
+                TextType='ssml',  # Set the text type to SSML
+                Engine="neural",
+                LanguageCode="en-GB"
+            )
+        except ClientError as e:
+            http_status_code = e.response['ResponseMetadata']['HTTPStatusCode']
+            aws_error_code = e.response['Error']['Code']
+            error_message = f"Failed to synthesize speech using Amazon Polly. HTTP status code: {http_status_code}, AWS error code: {aws_error_code}"
+            raise RuntimeError(error_message) from e
 
         # Read the audio data and create an AudioSegment object
         audio_data = response['AudioStream'].read()

@@ -8,7 +8,7 @@ def fetch_and_format_data(table, columns, num_rows):
     with SessionLocal() as db_session:
 
         # Fetch rows in descending order of id
-        query = db_session.query(table).order_by(table.id.desc())
+        query = db_session.query(table).order_by(table.date.desc())
 
         # If n is specified, fetch the last n rows; otherwise, fetch all rows
         rows = query.limit(num_rows) if num_rows else query.all()

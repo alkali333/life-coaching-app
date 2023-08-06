@@ -1,52 +1,78 @@
+
 import os
 import stat
-from sqlalchemy import Column, String, Date, Integer, create_engine
+from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, Date
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 
 
 Base = declarative_base()
 
-class GoalsAndDreams(Base):
-    __tablename__ = 'goals_and_dreams'
+class Users(Base):
+    __tablename__ = 'users'
+    
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    description = Column(String)
-
-class CurrentTasks(Base):
-    __tablename__ = 'current_tasks'
-    id = Column(Integer, primary_key=True, index=True)
-    entry = Column(String)
-    date = Column(Date)
-
-class SkillsAndVirtues(Base):
-    __tablename__ = 'skills_and_virtues'
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-
-class Obstacles(Base):
-    __tablename__ = 'obstacles'
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    cause = Column(String)
+    name = Column(String, unique=True, index=True)
+    
+    # Define the one-to-many relationships
+    goals_and_dreams = relationship('GoalsAndDreams', back_populates='users')
+    gratitude_journal = relationship('GratitudeJournal', back_populates='users')
+    current_projects = relationship('CurrentProjects', back_populates='users')
 
 class GratitudeJournal(Base):
     __tablename__ = 'gratitude_journal'
     id = Column(Integer, primary_key=True, index=True)
     entry = Column(String)
     date = Column(Date)
+    user_id = Column(Integer, ForeignKey('users.id'))
 
-class VentingJournal(Base):
-    __tablename__ = 'venting_journal'
-    id = Column(Integer, primary_key=True, index=True)
-    entry = Column(String)
-    date = Column(Date)
+    users = relationship('Users', back_populates='gratitude_journal')
+    
 
-class Tools(Base):
-    __tablename__ = 'tools'
+
+class GoalsAndDreams(Base):
+    __tablename__ = 'goals_and_dreams'
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     description = Column(String)
+    user_id = Column(Integer, ForeignKey('users.id'))
+
+    users = relationship('Users', back_populates='goals_and_dreams')
+
+class CurrentProjects(Base):
+    __tablename__ = 'current_projects'
+    id = Column(Integer, primary_key=True, index=True)
+    entry = Column(String)
+    date = Column(Date)
+    user_id = Column(Integer, ForeignKey('users.id'))
+
+    users = relationship('Users', back_populates='current_projects')
+    
+
+# class SkillsAndVirtues(Base):
+#     __tablename__ = 'skills_and_virtues'
+#     id = Column(Integer, primary_key=True, index=True)
+#     name = Column(String)
+
+# class Obstacles(Base):
+#     __tablename__ = 'obstacles'
+#     id = Column(Integer, primary_key=True, index=True)
+#     name = Column(String)
+#     cause = Column(String)
+
+
+# class VentingJournal(Base):
+#     __tablename__ = 'venting_journal'
+#     id = Column(Integer, primary_key=True, index=True)
+#     entry = Column(String)
+#     date = Column(Date)
+
+# class Tools(Base):
+#     __tablename__ = 'tools'
+#     id = Column(Integer, primary_key=True, index=True)
+#     name = Column(String)
+#     description = Column(String)
 
 # Ensure the directory exists
 DATABASE_DIR = "database"
@@ -68,4 +94,3 @@ def set_database_permissions(db_path):
     os.chmod(db_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP)
 
 set_database_permissions(DATABASE_URL_PATH)
-

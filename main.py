@@ -16,6 +16,11 @@ from db_helpers import fetch_and_format_data
 load_dotenv(find_dotenv(), override=True)
 
 
+# Hardcode user for now
+if 'user' not in st.session_state:
+    st.session_state.user = 'Jake'
+
+
 st.subheader('Goals And Dreams')
 
 # Display existing data
@@ -78,7 +83,7 @@ if st.button("Goals And Dreams Motivation!"):
     with st.spinner('Generating your daily exercise...'):
         user_data = fetch_and_format_data(GoalsAndDreams, columns=['name', 'description'], num_rows=None)
     
-        llm_response = create_motivational_text(user_data)
+        llm_response = create_motivational_text(user=st.session_state.user, user_data=user_data)
 
         # generate audio
         audio_path = text_to_speech(llm_response, file_name="goals_and_dreams_motivation", speed=75)
@@ -100,7 +105,10 @@ if st.button("Daily Motivation"):
         last_gratitude_string = fetch_and_format_data(GratitudeJournal, columns=['entry'], num_rows=1)
         last_current_task_string = fetch_and_format_data(CurrentTasks, columns=['entry'], num_rows=1)
 
-        llm_response = create_daily_motivational_text(last_gratitude_string, last_current_task_string)
+        llm_response = create_daily_motivational_text(
+            user=st.session_state.user, 
+            last_gratitude_string=last_gratitude_string, 
+            last_current_task_string=last_current_task_string)
 
         file_name = "daily_motivation"
         # generate audio

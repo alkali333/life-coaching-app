@@ -37,3 +37,22 @@ def create_daily_motivational_text(user, last_gratitude_string, last_current_tas
     chain = LLMChain(llm=llm, prompt=prompt)
     return chain.run({"gratitude": last_gratitude_string, "dailytasks": last_current_task_string})
 
+def create_harsh_pep_talk(user, hopes_and_dreams_string, goals_string):
+    prompt_template = f"""\
+    You are a strict and frightening drill drill sergeant shouting at {user}, telling him to get himself together if he wants to succeeed. Explain to him that if he doesn't carry out his responsibilities he 
+     will have no hope in achieving his goals. Don't mince your words, give it to him straight! Tease him too with dry humour.
+
+    His responsibilities are:  {{currentprojects}}  
+    His goals are: {{goals}}
+"""
+
+    prompt = PromptTemplate(
+    template=prompt_template, input_variables=["currentprojects", "goals"]
+    )
+    
+    llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=1)
+    
+    chain = LLMChain(llm=llm, prompt=prompt)
+    return chain.run({"goals": hopes_and_dreams_string, "currentprojects": goals_string})
+
+

@@ -13,12 +13,15 @@ class Users(Base):
     __tablename__ = 'users'
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
-    
+    name = Column(String, unique=True)
+    email = Column(String, unique=True)
+    password = Column(String(100))  # Hashed password column
+
     # Define the one-to-many relationships
     goals_and_dreams = relationship('GoalsAndDreams', back_populates='users')
     gratitude_journal = relationship('GratitudeJournal', back_populates='users')
     current_projects = relationship('CurrentProjects', back_populates='users')
+
 
 class GratitudeJournal(Base):
     __tablename__ = 'gratitude_journal'

@@ -12,7 +12,7 @@ from sqlalchemy import desc
 
 # My imports
 from models import GoalsAndDreams, GratitudeJournal, CurrentProjects, Users, SessionLocal
-from openai_calls import create_motivational_text, create_daily_motivational_text
+from openai_calls import create_motivational_text, create_daily_motivational_text, create_harsh_pep_talk
 from polly import text_to_speech
 
 # The tables we want to work with
@@ -119,14 +119,14 @@ else:
 
 
     st.subheader('Morning Motivation')
-    if st.button("Goals And Dreams Motivation!"):
+    if st.button("Goals And Dreams Visualisation!"):
         with st.spinner('Generating your daily exercise...'):
             user_data = fetch_and_format_data(GoalsAndDreams, columns=['name', 'description'], num_rows=None)
         
             llm_response = create_motivational_text(user=st.session_state.user_name, user_data=user_data)
 
             # generate audio
-            audio_path = text_to_speech(llm_response, file_name="goals_and_dreams_motivation", speed=75)
+            audio_path = text_to_speech(llm_response, file_name="goals_and_dreams_motivation", speed=75, voice="Emma")
 
             # Play the audio in the Streamlit app
             st.audio(audio_path)
@@ -134,7 +134,7 @@ else:
             with open(audio_path, 'rb') as file:
                 file_bytes = file.read()
                 st.download_button(
-                    label="Download Daily Exercise",
+                    label="Download Goals And Dreams Visualisation",
                     data=file_bytes,
                     file_name="motivation-speech.mp3",
                     mime="audio/mpeg"
@@ -152,7 +152,7 @@ else:
 
             file_name = "daily_motivation"
             # generate audio
-            audio_path = text_to_speech(llm_response, file_name=file_name)
+            audio_path = text_to_speech(llm_response, file_name=file_name, voice="Emma")
 
             # Play the audio in the Streamlit app
             st.audio(audio_path)
@@ -166,11 +166,31 @@ else:
                     mime="audio/mpeg"
                 )
 
-    # if st.button("Get Your Shit Together!"):
-    #     with st.spinner("Words of wisdom incoming, open your ears and sit up straight!"):
-    #         hopes_and_dreams_string = fetch_and_format_data(GoalsAndDreams, columns=['name'], num_rows=None)
-    #         goals_string = fetch_and_format_data(CurrentProjects, columns=['entry'], num_rows=1)
-    
+    if st.button("Get Your Shit Together!"):
+        with st.spinner("Words of wisdom incoming, open your ears and sit up straight!"):
+            hopes_and_dreams_string = fetch_and_format_data(GoalsAndDreams, columns=['name'], num_rows=None)
+            goals_string = fetch_and_format_data(CurrentProjects, columns=['entry'], num_rows=1)
+            llm_response= create_harsh_pep_talk(
+                            user=st.session_state.user_name, 
+                            hopes_and_dreams_string=hopes_and_dreams_string, 
+                            goals_string=goals_string
+                            )
+            
+            file_name = "harsh_pep_talk"
+            # generate audio
+            audio_path = text_to_speech(llm_response, file_name=file_name, speed=125, voice="Matthew")
+
+            # Play the audio in the Streamlit app
+            st.audio(audio_path)
+            # # Provide a download button for the audio file
+            with open(audio_path, 'rb') as file:
+                file_bytes = file.read()
+                st.download_button(
+                    label="Download Pep Talk",
+                    data=file_bytes,
+                    file_name=file_name +".mp3",
+                    mime="audio/mpeg"
+                )
 
 
 ##### Implement a pep talk that takes the names of the goals and dreams as well as the daily tasks and links them

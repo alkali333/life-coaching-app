@@ -5,7 +5,7 @@ import boto3
 import os
 import io
 
-def text_to_speech(text, file_name, speed=100):
+def text_to_speech(text, file_name, speed=100, voice="Emma"):
 
     # Maximum character limit for Polly
     MAX_CHAR_LIMIT = 3000
@@ -33,7 +33,7 @@ def text_to_speech(text, file_name, speed=100):
             response = polly_client.synthesize_speech(
                 Text=ssml_part,
                 OutputFormat='mp3',
-                VoiceId='Emma',
+                VoiceId=voice,
                 TextType='ssml',  # Set the text type to SSML
                 Engine="neural",
                 LanguageCode="en-GB"

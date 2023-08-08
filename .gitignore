@@ -2,4 +2,6 @@ venv/
 .env
 *.mp3
 *.yaml
+__pycache__
+
 

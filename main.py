@@ -50,138 +50,141 @@ else:
     st.write(f"Welcome, {st.session_state.user_name}!")  # Greeting the user by their name
 
 
-
+    col1, col2 = st.columns(2)
 #
 ################## GOALS AND DREAMS
 #
+    with col1:
+        st.subheader('Goals And Dreams')
 
-    st.subheader('Goals And Dreams')
-
-    # Display existing data
-    with SessionLocal() as session:
-        existing_data = session.query(GoalsAndDreams.name, GoalsAndDreams.description)\
-                            .filter(GoalsAndDreams.user_id == st.session_state.user_id)\
-                            .all()
-        existing_data_df = pd.DataFrame(existing_data, columns=['name', 'description'])
-        st.table(existing_data_df)
-
-    # Count the number of existing entries
-    count_records = len(existing_data)
-
-    # Display form for new entry if less than 3 entries exist
-    if count_records < 3:
-        with st.form(key='goals_and_dreams', clear_on_submit=True):
-            name = st.text_input('Name')
-            description = st.text_input('Description')
-            submit_button = st.form_submit_button(label='Submit')
-
-            if submit_button:
-                with SessionLocal() as session:
-                    new_goal = GoalsAndDreams(name=name, description=description, user_id=st.session_state.user_id)
-                    session.add(new_goal)
-                    session.commit()
-                    st.experimental_rerun()  # Rerun the app to refresh the data
-    else:
-        st.write("You've reached the limit of 3 entries.")
-
-    if st.button("Clear All Entries"):
+        # Display existing data
         with SessionLocal() as session:
-            session.query(GoalsAndDreams).filter(GoalsAndDreams.user_id == st.session_state.user_id).delete()
-            session.commit()
-            st.experimental_rerun()  # Rerun the app to refresh the data
+            existing_data = session.query(GoalsAndDreams.name, GoalsAndDreams.description)\
+                                .filter(GoalsAndDreams.user_id == st.session_state.user_id)\
+                                .all()
+            existing_data_df = pd.DataFrame(existing_data, columns=['name', 'description'])
+            st.table(existing_data_df)
+
+        # Count the number of existing entries
+        count_records = len(existing_data)
+
+        # Display form for new entry if less than 3 entries exist
+        if count_records < 3:
+            with st.form(key='goals_and_dreams', clear_on_submit=True):
+                name = st.text_input('Name')
+                description = st.text_input('Description')
+                submit_button = st.form_submit_button(label='Submit')
+
+                if submit_button:
+                    with SessionLocal() as session:
+                        new_goal = GoalsAndDreams(name=name, description=description, user_id=st.session_state.user_id)
+                        session.add(new_goal)
+                        session.commit()
+                        st.experimental_rerun()  # Rerun the app to refresh the data
+        else:
+            st.write("You've reached the limit of 3 entries.")
+
+        if st.button("Clear All Entries"):
+            with SessionLocal() as session:
+                session.query(GoalsAndDreams).filter(GoalsAndDreams.user_id == st.session_state.user_id).delete()
+                session.commit()
+                st.experimental_rerun()  # Rerun the app to refresh the data
+    
 
 #
 ################## POWERS AND ACHIEVEMENTS
 #
+    with col2:
+        st.subheader('Powers And Achievements')
 
-    st.subheader('Powers And Achievements')
-
-    # Display existing data
-    with SessionLocal() as session:
-        existing_data = session.query(PowersAndAchievements.name, PowersAndAchievements.description)\
-                            .filter(PowersAndAchievements.user_id == st.session_state.user_id)\
-                            .all()
-        existing_data_df = pd.DataFrame(existing_data, columns=['name', 'description'])
-        st.table(existing_data_df)
-
-    # Count the number of existing entries
-    count_records = len(existing_data)
-
-    # Display form for new entry if less than 3 entries exist
-    if count_records < 5:
-        with st.form(key='powers_and_achievements', clear_on_submit=True):
-            name = st.text_input('Name')
-            description = st.text_input('Description')
-            submit_button = st.form_submit_button(label='Submit')
-
-            if submit_button:
-                with SessionLocal() as session:
-                    new_goal = PowersAndAchievements(name=name, description=description, user_id=st.session_state.user_id)
-                    session.add(new_goal)
-                    session.commit()
-                    st.experimental_rerun()  # Rerun the app to refresh the data
-    else:
-        st.write("You've reached the limit of 5 entries.")
-
-    if st.button("Clear All Entries", key="clear_all_powers"):
+        # Display existing data
         with SessionLocal() as session:
-            session.query(PowersAndAchievements).filter(PowersAndAchievements.user_id == st.session_state.user_id).delete()
-            session.commit()
-            st.experimental_rerun()  # Rerun the app to refresh the data
+            existing_data = session.query(PowersAndAchievements.name, PowersAndAchievements.description)\
+                                .filter(PowersAndAchievements.user_id == st.session_state.user_id)\
+                                .all()
+            existing_data_df = pd.DataFrame(existing_data, columns=['name', 'description'])
+            st.table(existing_data_df)
 
+        # Count the number of existing entries
+        count_records = len(existing_data)
+
+        # Display form for new entry if less than 3 entries exist
+        if count_records < 5:
+            with st.form(key='powers_and_achievements', clear_on_submit=True):
+                name = st.text_input('Name')
+                description = st.text_input('Description')
+                submit_button = st.form_submit_button(label='Submit')
+
+                if submit_button:
+                    with SessionLocal() as session:
+                        new_goal = PowersAndAchievements(name=name, description=description, user_id=st.session_state.user_id)
+                        session.add(new_goal)
+                        session.commit()
+                        st.experimental_rerun()  # Rerun the app to refresh the data
+        else:
+            st.write("You've reached the limit of 5 entries.")
+
+        if st.button("Clear All Entries", key="clear_all_powers"):
+            with SessionLocal() as session:
+                session.query(PowersAndAchievements).filter(PowersAndAchievements.user_id == st.session_state.user_id).delete()
+                session.commit()
+                st.experimental_rerun()  # Rerun the app to refresh the data
+    st.write("\n\n" * 11)
+    st.write("-" * 777)
+    col3, col4 = st.columns(2)
 #
 ################## GRATITUDE JOURNAL 
 #
+    with col3:
+        st.subheader('Gratitude Journal')
+        # Display existing data
+        with SessionLocal() as session:
+            existing_data = session.query(GratitudeJournal.date, GratitudeJournal.entry)\
+                                .filter(GratitudeJournal.user_id == st.session_state.user_id)\
+                                .order_by(desc(GratitudeJournal.date))\
+                                .limit(3)\
+                                .all()
+            existing_data_df = pd.DataFrame(existing_data, columns=['date', 'entry'])
+            st.dataframe(existing_data_df)
 
-    st.subheader('Gratitude Journal')
-    # Display existing data
-    with SessionLocal() as session:
-        existing_data = session.query(GratitudeJournal.date, GratitudeJournal.entry)\
-                            .filter(GratitudeJournal.user_id == st.session_state.user_id)\
-                            .order_by(desc(GratitudeJournal.date))\
+        # Form to add new entries
+        with st.form(key='gratitude_journal', clear_on_submit=True):
+            entry = st.text_area('Entry')
+            submit_button = st.form_submit_button(label='Submit')
+            if submit_button:
+                with SessionLocal() as session:
+                    new_entry = GratitudeJournal(entry=entry, date=datetime.today().date(), user_id=st.session_state.user_id )
+                    session.add(new_entry)
+                    session.commit()
+                    st.experimental_rerun()  # Rerun the app to refresh the data
+
+    #
+    ################## CURRENT TASKS
+    #
+    with col4:
+        st.subheader('Current Tasks')
+        # Display existing data
+        with SessionLocal() as session:
+            existing_data = session.query(CurrentProjects.date, CurrentProjects.entry)\
+                            .filter(CurrentProjects.user_id == st.session_state.user_id)\
+                            .order_by(desc(CurrentProjects.date))\
                             .limit(3)\
                             .all()
-        existing_data_df = pd.DataFrame(existing_data, columns=['date', 'entry'])
-        st.dataframe(existing_data_df)
+            existing_data_df = pd.DataFrame(existing_data, columns=['date', 'entry'] )
+            st.dataframe(existing_data_df)
 
-    # Form to add new entries
-    with st.form(key='gratitude_journal', clear_on_submit=True):
-        entry = st.text_area('Entry')
-        submit_button = st.form_submit_button(label='Submit')
-        if submit_button:
-            with SessionLocal() as session:
-                new_entry = GratitudeJournal(entry=entry, date=datetime.today().date(), user_id=st.session_state.user_id )
-                session.add(new_entry)
-                session.commit()
-                st.experimental_rerun()  # Rerun the app to refresh the data
+        # Form to add new entries
+        with st.form(key='current_tasks', clear_on_submit=True):
+            entry = st.text_area('Entry')
+            submit_button = st.form_submit_button(label='Submit')
+            if submit_button:
+                with SessionLocal() as session:
+                    new_entry = CurrentProjects(entry=entry, date=datetime.today().date(), user_id=st.session_state.user_id)
+                    session.add(new_entry)
+                    session.commit()
+                    st.experimental_rerun()  # Rerun the app to refresh the data
 
-#
-################## CURRENT TASKS
-#
-
-    st.subheader('Current Tasks')
-    # Display existing data
-    with SessionLocal() as session:
-        existing_data = session.query(CurrentProjects.date, CurrentProjects.entry)\
-                        .filter(CurrentProjects.user_id == st.session_state.user_id)\
-                        .order_by(desc(CurrentProjects.date))\
-                        .limit(3)\
-                        .all()
-        existing_data_df = pd.DataFrame(existing_data, columns=['date', 'entry'] )
-        st.dataframe(existing_data_df)
-
-    # Form to add new entries
-    with st.form(key='current_tasks', clear_on_submit=True):
-        entry = st.text_area('Entry')
-        submit_button = st.form_submit_button(label='Submit')
-        if submit_button:
-            with SessionLocal() as session:
-                new_entry = CurrentProjects(entry=entry, date=datetime.today().date(), user_id=st.session_state.user_id)
-                session.add(new_entry)
-                session.commit()
-                st.experimental_rerun()  # Rerun the app to refresh the data
-
-
+    st.write("\n" * 11)
     if diary_updated(st.session_state.user_id):
 
     #

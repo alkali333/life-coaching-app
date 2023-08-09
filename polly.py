@@ -5,7 +5,7 @@ import boto3
 import os
 import io
 
-def text_to_speech(text, file_name, speed=100, voice="Emma"):
+def text_to_speech(text, speed=100, voice="Emma"):
 
     # Maximum character limit for Polly
     MAX_CHAR_LIMIT = 3000
@@ -51,8 +51,9 @@ def text_to_speech(text, file_name, speed=100, voice="Emma"):
         # Append this segment to the combined audio
         combined_audio += audio_segment
 
-    # Save the combined audio to a file
-    final_audio_path = file_name + '.mp3'
+    # Save the combined audio to a file 
+    # this will eventually have to be done properly
+    final_audio_path = 'temp.mp3'
     combined_audio.export(final_audio_path, format='mp3')
 
     return final_audio_path

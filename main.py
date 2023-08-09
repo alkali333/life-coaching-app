@@ -2,21 +2,19 @@ import streamlit as st
 
 import streamlit_authenticator as stauth
 from werkzeug.security import check_password_hash
-import bcrypt
 import yaml
 
-from datetime import datetime
+from datetime import date, datetime
 from dotenv import load_dotenv, find_dotenv
 import pandas as pd
 from sqlalchemy import desc
 
 # My imports
 from models import GoalsAndDreams, GratitudeJournal, CurrentProjects, Users, SessionLocal
-from openai_calls import create_motivational_text, create_daily_motivational_text, create_harsh_pep_talk
-from polly import text_to_speech
+from coaching_content import morning_exercise, motivation_pep_talk, get_your_shit_together
 
 # The tables we want to work with
-from db_helpers import fetch_and_format_data, diary_updated
+from db_helpers import diary_updated
 
 load_dotenv(find_dotenv(), override=True)
 
@@ -102,7 +100,7 @@ else:
         existing_data = session.query(GratitudeJournal.date, GratitudeJournal.entry)\
                             .filter(GratitudeJournal.user_id == st.session_state.user_id)\
                             .order_by(desc(GratitudeJournal.date))\
-                            .limit(5)\
+                            .limit(3)\
                             .all()
         existing_data_df = pd.DataFrame(existing_data, columns=['date', 'entry'])
         st.dataframe(existing_data_df)
@@ -128,7 +126,7 @@ else:
         existing_data = session.query(CurrentProjects.date, CurrentProjects.entry)\
                         .filter(CurrentProjects.user_id == st.session_state.user_id)\
                         .order_by(desc(CurrentProjects.date))\
-                        .limit(5)\
+                        .limit(3)\
                         .all()
         existing_data_df = pd.DataFrame(existing_data, columns=['date', 'entry'] )
         st.dataframe(existing_data_df)
@@ -151,88 +149,59 @@ else:
     ################## MORNING MOTIVATION
     #
 
-        st.subheader('Daily Exercise')
-        if st.button("Goals And Dreams Visualisation!"):
-            with st.spinner('Generating your daily exercise...'):
-                user_data = fetch_and_format_data(GoalsAndDreams, columns=['name', 'description'], num_rows=None)
-            
-                llm_response = create_motivational_text(user=st.session_state.user_name, user_data=user_data)
-
-                # generate audio
-                audio_path = text_to_speech(llm_response, file_name="goals_and_dreams_motivation", speed=75, voice="Emma")
-
-                # Play the audio in the Streamlit app
+        st.subheader('Daily Exercises and Pep Talks')
+        if st.button("Morning exercise"):
+            with st.spinner('Hold tight, generating your exercise...'):            
+                audio_path = morning_exercise(st.session_state.user_id)
                 st.audio(audio_path)
-                # Provide a download button for the audio file
                 with open(audio_path, 'rb') as file:
                     file_bytes = file.read()
+
                     st.download_button(
-                        label="Download Goals And Dreams Visualisation",
+                        label="Download",
                         data=file_bytes,
-                        file_name="motivation-speech.mp3",
+                        file_name=f"morning-exercise-{date.today().strftime('%Y-%m-%d')}.mp3",
                         mime="audio/mpeg"
                     )
+
 
     #
     ################## DAILY MOTIVATION
     #
 
-        if st.button("Daily Motivation"):
+        if st.button("Daily Motivation Pep Talk"):
             with st.spinner("Generating your daily motivation pep talk"):
-                last_gratitude_string = fetch_and_format_data(GratitudeJournal, columns=['entry'], num_rows=1)
-                last_current_task_string = fetch_and_format_data(CurrentProjects, columns=['entry'], num_rows=1)
-
-                llm_response = create_daily_motivational_text(
-                    user=st.session_state.user_name, 
-                    last_gratitude_string=last_gratitude_string, 
-                    last_current_task_string=last_current_task_string)
-
-                file_name = "daily_motivation"
-                # generate audio
-                audio_path = text_to_speech(llm_response, file_name=file_name, voice="Emma")
-
-                # Play the audio in the Streamlit app
+                audio_path = motivation_pep_talk(st.session_state.user_id)
                 st.audio(audio_path)
-                # # Provide a download button for the audio file
                 with open(audio_path, 'rb') as file:
                     file_bytes = file.read()
+
                     st.download_button(
-                        label="Download Daily Motivation Speech",
+                        label="Download",
                         data=file_bytes,
-                        file_name=file_name +".mp3",
+                        file_name=f"pep-talk-{date.today().strftime('%Y-%m-%d')}.mp3",
                         mime="audio/mpeg"
                     )
+
     #
     ################## GET YOUR SHIT TOGETHER
     #
 
         if st.button("Get Your Shit Together!"):
             with st.spinner("Words of wisdom incoming, open your ears and sit up straight!"):
-                hopes_and_dreams_string = fetch_and_format_data(GoalsAndDreams, columns=['name'], num_rows=None)
-                goals_string = fetch_and_format_data(CurrentProjects, columns=['entry'], num_rows=1)
-                llm_response= create_harsh_pep_talk(
-                                user=st.session_state.user_name, 
-                                hopes_and_dreams_string=hopes_and_dreams_string, 
-                                goals_string=goals_string
-                                )
-                
-                file_name = "harsh_pep_talk"
-                # generate audio
-                audio_path = text_to_speech(llm_response, file_name=file_name, speed=125, voice="Matthew")
-
-                # Play the audio in the Streamlit app
+                audio_path = get_your_shit_together(st.session_state.user_id)
                 st.audio(audio_path)
-                # # Provide a download button for the audio file
                 with open(audio_path, 'rb') as file:
                     file_bytes = file.read()
+
                     st.download_button(
-                        label="Download Pep Talk",
+                        label="Download",
                         data=file_bytes,
-                        file_name=file_name +".mp3",
+                        file_name=f"get-your-shit-together-{date.today().strftime('%Y-%m-%d')}.mp3",
                         mime="audio/mpeg"
                     )
 
     else:
         "Please make sure your gratitude diary and daily task list is up to date if you want access to the exercises and talks!"
-##### Implement a pep talk that takes the names of the goals and dreams as well as the daily tasks and links them
+
             

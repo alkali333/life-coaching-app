@@ -2,7 +2,6 @@ import streamlit as st
 
 import streamlit_authenticator as stauth
 from werkzeug.security import check_password_hash
-import yaml
 
 from datetime import date, datetime
 from dotenv import load_dotenv, find_dotenv
@@ -18,15 +17,16 @@ from db_helpers import diary_updated
 
 load_dotenv(find_dotenv(), override=True)
 
-
-# Authenticating user with Streamlit-Authenticator
+from sqlalchemy.orm.exc import NoResultFound
+# Authenticating user with database
 def authenticate(email, password):
-    with open('users.yaml', 'r') as file:
-        users = yaml.safe_load(file)
-
-    for user in users:
-        if user['email'] == email and check_password_hash(user['password'], password):
-            return True
+    with SessionLocal() as session:
+        try:
+            user_in_db = session.query(Users).filter_by(email=email).one()
+            if check_password_hash(user_in_db.password, password):
+                return True
+        except NoResultFound:
+            pass
     return False
 
 
@@ -43,12 +43,11 @@ if 'user_id' not in st.session_state:
                     st.session_state.user_id = user_in_db.id
                     st.session_state.user_name = user_in_db.name  # Storing the user's name in session state
                 else:
-                    st.sidebar.text("User email not found in database.")
+                    st.sidebar.text("Unexpected error: User email found but not retrieved.")
         else:
             st.sidebar.text("Authentication failed. Please check your credentials.")
 else:
     st.write(f"Welcome, {st.session_state.user_name}!")  # Greeting the user by their name
-
 
     col1, col2 = st.columns(2)
 #
@@ -63,6 +62,7 @@ else:
                                 .filter(GoalsAndDreams.user_id == st.session_state.user_id)\
                                 .all()
             existing_data_df = pd.DataFrame(existing_data, columns=['name', 'description'])
+            existing_data_df.set_index('name', inplace=True)
             st.table(existing_data_df)
 
         # Count the number of existing entries
@@ -103,6 +103,7 @@ else:
                                 .filter(PowersAndAchievements.user_id == st.session_state.user_id)\
                                 .all()
             existing_data_df = pd.DataFrame(existing_data, columns=['name', 'description'])
+            existing_data_df.set_index('name', inplace=True)
             st.table(existing_data_df)
 
         # Count the number of existing entries
@@ -145,6 +146,7 @@ else:
                                 .limit(3)\
                                 .all()
             existing_data_df = pd.DataFrame(existing_data, columns=['date', 'entry'])
+            existing_data_df.set_index('date', inplace=True)
             st.dataframe(existing_data_df)
 
         # Form to add new entries
@@ -171,6 +173,7 @@ else:
                             .limit(3)\
                             .all()
             existing_data_df = pd.DataFrame(existing_data, columns=['date', 'entry'] )
+            existing_data_df.set_index('date', inplace=True)
             st.dataframe(existing_data_df)
 
         # Form to add new entries
@@ -184,66 +187,71 @@ else:
                     session.commit()
                     st.experimental_rerun()  # Rerun the app to refresh the data
 
-    st.write("\n" * 11)
+    st.write("\n\n" * 11)
+    st.write("-" * 777)
     if diary_updated(st.session_state.user_id):
 
     #
     ################## MORNING MOTIVATION
     #
-
         st.subheader('Daily Exercises and Pep Talks')
-        if st.button("Morning exercise"):
-            with st.spinner('Hold tight, generating your exercise...'):            
-                audio_path = morning_exercise(st.session_state.user_id)
-                st.audio(audio_path)
-                with open(audio_path, 'rb') as file:
-                    file_bytes = file.read()
+        col4, col5 = st.columns(2)
+        with col4:
+            
+            if st.button("Morning exercise"):
+                with st.spinner('Hold tight, generating your exercise...'):            
+                    audio_path = morning_exercise(st.session_state.user_id)
+                    st.audio(audio_path)
+                    with open(audio_path, 'rb') as file:
+                        file_bytes = file.read()
 
-                    st.download_button(
-                        label="Download",
-                        data=file_bytes,
-                        file_name=f"morning-exercise-{date.today().strftime('%Y-%m-%d')}.mp3",
-                        mime="audio/mpeg"
-                    )
+                        st.download_button(
+                            label="Download",
+                            data=file_bytes,
+                            file_name=f"morning-exercise-{date.today().strftime('%Y-%m-%d')}.mp3",
+                            mime="audio/mpeg"
+                        )
 
 
-    #
-    ################## DAILY MOTIVATION
-    #
+        #
+        ################## DAILY MOTIVATION
+        #   
 
-        if st.button("Daily Motivation Pep Talk"):
-            with st.spinner("Generating your daily motivation pep talk"):
-                audio_path = motivation_pep_talk(st.session_state.user_id)
-                st.audio(audio_path)
-                with open(audio_path, 'rb') as file:
-                    file_bytes = file.read()
+            if st.button("Daily Motivation Pep Talk"):
+                with st.spinner("Generating your daily motivation pep talk"):
+                    audio_path = motivation_pep_talk(st.session_state.user_id)
+                    st.audio(audio_path)
+                    with open(audio_path, 'rb') as file:
+                        file_bytes = file.read()
 
-                    st.download_button(
-                        label="Download",
-                        data=file_bytes,
-                        file_name=f"pep-talk-{date.today().strftime('%Y-%m-%d')}.mp3",
-                        mime="audio/mpeg"
-                    )
+                        st.download_button(
+                            label="Download",
+                            data=file_bytes,
+                            file_name=f"pep-talk-{date.today().strftime('%Y-%m-%d')}.mp3",
+                            mime="audio/mpeg"
+                        )
+        with col5:
+        #   
+        ################## GET YOUR SHIT TOGETHER
+        #
 
-    #
-    ################## GET YOUR SHIT TOGETHER
-    #
+            if st.button("Get Your Shit Together!"):
+                with st.spinner("Words of wisdom incoming, open your ears and sit up straight!"):
+                    audio_path = get_your_shit_together(st.session_state.user_id)
+                    st.audio(audio_path)
+                    with open(audio_path, 'rb') as file:
+                        file_bytes = file.read()
 
-        if st.button("Get Your Shit Together!"):
-            with st.spinner("Words of wisdom incoming, open your ears and sit up straight!"):
-                audio_path = get_your_shit_together(st.session_state.user_id)
-                st.audio(audio_path)
-                with open(audio_path, 'rb') as file:
-                    file_bytes = file.read()
-
-                    st.download_button(
-                        label="Download",
-                        data=file_bytes,
-                        file_name=f"get-your-shit-together-{date.today().strftime('%Y-%m-%d')}.mp3",
-                        mime="audio/mpeg"
-                    )
+                        st.download_button(
+                            label="Download",
+                            data=file_bytes,
+                            file_name=f"get-your-shit-together-{date.today().strftime('%Y-%m-%d')}.mp3",
+                            mime="audio/mpeg"
+                        )
+            if st.button("DO NOT PRESS THIS BUTTON"):
+                st.write("What did I tell you?")              
 
     else:
         "Please make sure your gratitude diary and daily task list is up to date if you want access to the exercises and talks!"
 
-            
+                

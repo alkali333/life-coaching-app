@@ -1,7 +1,7 @@
 from db_helpers import fetch_and_format_data, get_user_name
 from polly import text_to_speech
 from openai_calls import create_llm_content
-from models import GoalsAndDreams, GratitudeJournal, CurrentProjects
+from models import GoalsAndDreams, GratitudeJournal, CurrentProjects, PowersAndAchievements
 
 
 def morning_exercise(user_id):

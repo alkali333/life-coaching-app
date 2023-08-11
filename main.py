@@ -1,9 +1,5 @@
 import streamlit as st
 
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage, AIMessage
-
-
 import streamlit_authenticator as stauth
 from werkzeug.security import check_password_hash
 
@@ -28,12 +24,13 @@ from coaching_content import (
     blow_your_own_trumpet,
 )
 
-# The tables we want to work with
 from db_helpers import diary_updated, fetch_and_format_data
+from sqlalchemy.orm.exc import NoResultFound
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import SystemMessage, HumanMessage, AIMessage
+from polly import text_to_speech
 
 load_dotenv(find_dotenv(), override=True)
-
-from sqlalchemy.orm.exc import NoResultFound
 
 
 # Authenticating user with database
@@ -381,6 +378,7 @@ else:
     if "messages" in st.session_state:
         # print the latest response
         message_placeholder = st.empty()
+        audio_placeholder = st.empty()
 
         with st.form(key="chat", clear_on_submit=True):
             user_chat_input = st.text_area(label="Send a message")
@@ -393,8 +391,12 @@ else:
             response = chat(st.session_state.messages)
             st.session_state.messages.append(AIMessage(content=response.content))
 
-        message_placeholder.write(st.session_state.messages[-1].content)
+        final_message = st.session_state.messages[-1].content
+        message_placeholder.write(final_message)
 
-        # Now you have both the user_id (from session_state) and goal_id
-        # Run your function here
-        # your_function(user_id=st.session_state.user_id, goal_id=goal_id)
+        audio_path = text_to_speech(final_message)
+
+        # Open the audio file using the returned path and play it in the placeholder
+        with open(audio_path, "rb") as audio_file:
+            audio_bytes = audio_file.read()
+            audio_placeholder.audio(audio_bytes, format="audio/mp3")

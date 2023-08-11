@@ -1,7 +1,12 @@
 from db_helpers import fetch_and_format_data, get_user_name
 from polly import text_to_speech
 from openai_calls import create_llm_content
-from models import GoalsAndDreams, GratitudeJournal, CurrentProjects, PowersAndAchievements
+from models import (
+    GoalsAndDreams,
+    GratitudeJournal,
+    CurrentProjects,
+    PowersAndAchievements,
+)
 
 
 def morning_exercise(user_id):
@@ -10,13 +15,22 @@ def morning_exercise(user_id):
         GOALS: {goals}
     """
     user_name = get_user_name(user_id)
-    goals_string = fetch_and_format_data(user_id=user_id, table=GoalsAndDreams, columns=['name', 'description'], num_rows=None)
- 
-    llm_response = create_llm_content(template, {"user":user_name, "goals":goals_string})
+    goals_string = fetch_and_format_data(
+        user_id=user_id,
+        table=GoalsAndDreams,
+        columns=["name", "description"],
+        num_rows=None,
+        random=True,
+    )
+
+    llm_response = create_llm_content(
+        template, {"user": user_name, "goals": goals_string}
+    )
 
     audio_path = text_to_speech(llm_response, speed=75, voice="Emma")
 
     return audio_path
+
 
 def get_your_shit_together(user_id):
     template = """\
@@ -26,15 +40,31 @@ def get_your_shit_together(user_id):
         Their responsibilities are:  {currentprojects}  
         Their goals are: {goals}
     """
-    user_name = get_user_name(user_id)           
-    current_projects_string = fetch_and_format_data(user_id=user_id, table=CurrentProjects, columns=['entry'], num_rows=1)
-    goals_string = fetch_and_format_data(user_id=user_id, table=GoalsAndDreams, columns=['name'], num_rows=None)
+    user_name = get_user_name(user_id)
+    current_projects_string = fetch_and_format_data(
+        user_id=user_id, table=CurrentProjects, columns=["entry"], num_rows=1
+    )
+    goals_string = fetch_and_format_data(
+        user_id=user_id,
+        table=GoalsAndDreams,
+        columns=["name"],
+        num_rows=None,
+        random=True,
+    )
 
-    llm_response = create_llm_content(template, {"user": user_name, "currentprojects": current_projects_string, "goals": goals_string})
+    llm_response = create_llm_content(
+        template,
+        {
+            "user": user_name,
+            "currentprojects": current_projects_string,
+            "goals": goals_string,
+        },
+    )
 
     audio_path = text_to_speech(llm_response, speed=125, voice="Matthew")
 
     return audio_path
+
 
 def motivation_pep_talk(user_id):
     template = """\
@@ -43,12 +73,60 @@ def motivation_pep_talk(user_id):
     Then say something to motivate him to daily tasks from his last diary entry ( {currentprojects} ) help him imagine how it will feel to get these done, and remind him he has the skills to do it. Be very encouraging. Sign off from Emma (Your favourite AI cheer-leader)
     """
 
-    user_name = get_user_name(user_id)    
-    gratitude_string = fetch_and_format_data(user_id=user_id, table=GratitudeJournal, columns=['entry'], num_rows=1)
-    current_projects_string = fetch_and_format_data(user_id=user_id, table=CurrentProjects, columns=['entry'], num_rows=1)
-    
-    llm_response = create_llm_content(template, {"user":user_name, "gratitude": gratitude_string, "currentprojects": current_projects_string})
+    user_name = get_user_name(user_id)
+    gratitude_string = fetch_and_format_data(
+        user_id=user_id, table=GratitudeJournal, columns=["entry"], num_rows=1
+    )
+    current_projects_string = fetch_and_format_data(
+        user_id=user_id, table=CurrentProjects, columns=["entry"], num_rows=1
+    )
+
+    llm_response = create_llm_content(
+        template,
+        {
+            "user": user_name,
+            "gratitude": gratitude_string,
+            "currentprojects": current_projects_string,
+        },
+    )
 
     audio_path = text_to_speech(llm_response, voice="Emma")
+
+    return audio_path
+
+
+def blow_your_own_trumpet(user_id):
+    template = """\
+    You are Arthur, an empowering life coach reminding your client, {user}, about all their skills and how they can have the power to achieve their goals. 
+    Use their diary entries below to remind them of their power and tell them what they need to do to. Explain how us humans are magical beings who can create our own reality. 
+    Explain how their skills and achievements mean they can easily achieve their goals. 
+    ---------------------------------------------------
+    Their skills and achievements: {skills}
+    ---------------------------------------------------
+    Their goals: {goals}
+
+    """
+
+    user_name = get_user_name(user_id)
+    skills_string = fetch_and_format_data(
+        user_id=user_id,
+        table=PowersAndAchievements,
+        columns=["name", "description"],
+        num_rows=None,
+        random=True,
+    )
+    goals_string = fetch_and_format_data(
+        user_id=user_id,
+        table=GoalsAndDreams,
+        columns=["name", "description"],
+        num_rows=None,
+        random=True,
+    )
+
+    llm_response = create_llm_content(
+        template, {"user": user_name, "skills": skills_string, "goals": goals_string}
+    )
+
+    audio_path = text_to_speech(llm_response, voice="Arthur")
 
     return audio_path

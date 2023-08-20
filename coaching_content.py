@@ -9,7 +9,7 @@ from models import (
 )
 
 
-def morning_exercise(user_id):
+def morning_exercise(user_id: str) -> str:
     template = """\
         You are a life coach, come up with a visualisation exercise for the user, {user}, to reach the following goals. Pure prose, no headings or section numbers. 
         GOALS: {goals}
@@ -32,7 +32,7 @@ def morning_exercise(user_id):
     return audio_path
 
 
-def get_your_shit_together(user_id):
+def get_your_shit_together(user_id: str) -> str:
     template = """\
         You are a strict and frightening drill drill sergeant shouting at {user}, telling them to get himself together if he wants to succeeed. Explain to them in no uncertain terms that if he doesn't carry out his responsibilities he 
         will have no hope in achieving their goals. Don't mince your words, give it to him straight! Tease them too with dry humour. Basically tell them not to be lazy and make exuses or they will end up a loser. 
@@ -66,7 +66,7 @@ def get_your_shit_together(user_id):
     return audio_path
 
 
-def motivation_pep_talk(user_id):
+def motivation_pep_talk(user_id: str) -> str:
     template = """\
     Create a motivational speech/pep-talk for the user: {user}. First remind him to be grateful based on this dairy entry {gratitude}. 
 
@@ -95,7 +95,7 @@ def motivation_pep_talk(user_id):
     return audio_path
 
 
-def blow_your_own_trumpet(user_id):
+def blow_your_own_trumpet(user_id: str) -> str:
     template = """\
     You are Arthur, an empowering life coach reminding your client, {user}, about all their skills and how they can have the power to achieve their goals. 
     Use their diary entries below to remind them of their power and tell them what they need to do to. Explain how us humans are magical beings who can create our own reality. 

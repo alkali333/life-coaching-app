@@ -5,8 +5,10 @@ from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 import re
 
+from typing import Dict
 
-def create_llm_content(template, user_variables=None):
+
+def create_llm_content(template: str, user_variables: Dict[str, str] = None) -> str:
     llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=1)
     if not user_variables:  # if no user variables assume we are using a standard prompt
         return llm(template)

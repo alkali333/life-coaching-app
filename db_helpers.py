@@ -1,16 +1,70 @@
 from sqlalchemy import inspect, Table, MetaData
 from sqlalchemy import func
+from werkzeug.security import check_password_hash
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import IntegrityError
 
 from datetime import datetime, timedelta
 from models import SessionLocal, GratitudeJournal, CurrentProjects, Users
+
+# For type hints
+from typing import Type, List, Optional
+from sqlalchemy.ext.declarative import declarative_base as DeclarativeBase
+
+TableType = Type[DeclarativeBase]
 
 
 from sqlalchemy import func
 
 
+# Authenticating user with database
+def authenticate(email: str, password: str) -> bool:
+    with SessionLocal() as session:
+        try:
+            user_in_db = session.query(Users).filter_by(email=email).one()
+            if check_password_hash(user_in_db.password, password):
+                return True
+        except NoResultFound:
+            pass
+    return False
+
+
+def create_user(email: str, name: str, hashed_password: str) -> Users:
+    new_user = Users(email=email, name=name, password=hashed_password)
+
+    with SessionLocal() as session:
+        session.add(new_user)
+        try:
+            session.commit()
+        except IntegrityError:  # This handles cases where email is not unique
+            session.rollback()
+            raise ValueError(f"A user with email {email} already exists.")
+
+    return new_user
+
+
+def delete_user(user_id: int) -> None:
+    with SessionLocal() as session:
+        user = session.query(Users).filter(Users.id == user_id).one_or_none()
+
+        if not user:
+            raise ValueError(f"No user found with ID: {user_id}")
+
+        session.delete(user)
+        session.commit()
+
+
+from typing import List
+
+
 def fetch_and_format_data(
-    user_id, table, columns, num_rows=None, random=False, id=None
-):
+    user_id: int,
+    table: TableType,
+    columns: List[str],
+    num_rows: int = None,
+    random: bool = False,
+    id: int = None,
+) -> str:
     # Create and manage the session
     with SessionLocal() as db_session:
         # Start the query
@@ -28,6 +82,10 @@ def fetch_and_format_data(
         # If n is specified, fetch the last n rows; otherwise, fetch all rows
         rows = query.limit(num_rows) if num_rows else query.all()
 
+        # Check if the query returned any rows
+        if not rows:
+            return "    No specific entries yet"
+
         # Format the data into the desired string
         formatted_string = ", ".join(
             [
@@ -40,7 +98,7 @@ def fetch_and_format_data(
     return formatted_string
 
 
-def diary_updated(user_id):
+def diary_updated(user_id: int) -> bool:
     two_days_ago = (datetime.now() - timedelta(days=2)).date()
 
     with SessionLocal() as session:
@@ -65,7 +123,7 @@ def diary_updated(user_id):
     )
 
 
-def get_user_name(user_id):
+def get_user_name(user_id: int) -> str:
     with SessionLocal() as session:
         user = session.query(Users).filter(Users.id == user_id).one_or_none()
         if user:

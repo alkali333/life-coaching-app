@@ -5,7 +5,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 
 from datetime import datetime, timedelta
-from models import SessionLocal, GratitudeJournal, CurrentProjects, Users
+from models import SessionLocal, GratitudeJournal, CurrentProjects, Users, MindState
 
 # For type hints
 from typing import Type, List, Optional
@@ -130,3 +130,22 @@ def get_user_name(user_id: int) -> str:
             return user.name
         else:
             raise ValueError(f"No user found with ID: {user_id}")
+
+
+def populate_mindstate(column: str, info: str, user_id: int):
+    with SessionLocal() as session:
+        # attempt to update existing row
+        affected_rows = (
+            session.query(MindState)
+            .filter(MindState.user_id == user_id)
+            .update({column: info})  # update can take a dictionary
+        )
+
+        if affected_rows == 0:
+            # if no rows were affected, create a new record
+            new_mind_state = MindState(
+                user_id=user_id, **{column: info}
+            )  # need to unpack the dictionary when intialising class
+            session.add(new_mind_state)
+
+        session.commit()

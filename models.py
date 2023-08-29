@@ -25,6 +25,7 @@ class Users(Base):
     gratitude_journal = relationship("GratitudeJournal", back_populates="users")
     current_projects = relationship("CurrentProjects", back_populates="users")
     diary = relationship("Diary", back_populates="users")
+    mind_state = relationship("MindState", back_populates="users")
 
 
 class GoalsAndDreams(Base):
@@ -75,6 +76,20 @@ class Diary(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
 
     users = relationship("Users", back_populates="diary")
+
+
+class MindState(Base):
+    __tablename__ = "mind_state"
+    id = Column(Integer, primary_key=True, index=True)
+    hopes_and_dreams = Column(String)
+    skills_and_achievements = Column(String)
+    obstacles_and_challenges = Column(String)
+    current_missions = Column(String)
+    grateful_for = Column(String)
+    current_tasks = Column(String)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+
+    users = relationship("Users", back_populates="mind_state")
 
 
 # class Obstacles(Base):

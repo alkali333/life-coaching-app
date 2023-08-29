@@ -4,5 +4,6 @@ venv/
 *.yaml
 *.txt
 __pycache__
+*.ipynb
 
 

@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit_authenticator as stauth
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import SystemMessage, HumanMessage, AIMessage
 
@@ -56,32 +55,38 @@ else:
 
     with st.spinner("Loading your welcome messages"):
         ### Initialise welcome messages for the whole session (so they don't reset when submitting forms)
-        prompt = """You are an empowering life-coach, write two short sentances for {user} encouraging to use a form below to record their hopes and dreams. 
-                    Explain how this will help them to stay focused on their goals. 
-                    Include a genuine spiritual or motivational quote from a historical/famous person"""
-        llm_response = create_llm_content(prompt, {"user": st.session_state.user_name})
-        st.session_state.hopes_welcome = llm_response
+        if "hopes_welcome" not in st.session_state:
+            prompt = """You are an empowering life-coach, write two short sentances for {user} encouraging to reflect on their hopes and dreams. 
+                        Explain how this will help them to stay focused on their goals. 
+                        Include a genuine spiritual or motivational quote from a historical/famous person"""
+            llm_response = create_llm_content(
+                prompt, {"user": st.session_state.user_name}
+            )
+            st.session_state.hopes_welcome = llm_response
+        if "skills_welcome" not in st.session_state:
+            prompt = """You are an empowering life-coach, write two short sentances for {user} encouraging them to reflect on their skills and achievements. 
+                        It could be things they have achieved, skills they have, anything they like about themselves. The powers that can help towards their goals. 
+                        Include a genuine motivational or spiritual quote from a historical/famous person about self-belief."""
+            llm_response = create_llm_content(
+                prompt, {"user": st.session_state.user_name}
+            )
+            st.session_state.skills_welcome = llm_response
 
-        prompt = """You are an empowering life-coach, write two short sentances for {user} encouraging to use a form below to record their powers and achievements. 
-                    It could be things they have achieved, skills they have, anything they like about themselves. The powers that can help towards their goals. 
-                    Include a genuine motivational or spiritual quote from a historical/famous person about self-belief."""
-        llm_response = create_llm_content(prompt, {"user": st.session_state.user_name})
-        st.session_state.skills_welcome = llm_response
-
-        prompt = """You are an empowering life-coach, write 2-3 short sentances for {user} telling explaining the most important part of this AI coaching app.
-        Explain to them that they have to record 5 things they are grateful for every day, and 5 tasks/missions that they would like to complete. The gratitude can be
-        for achievements, people, places, pets, even small things. The tasks should be realted to their goals and dreams which may be listed below {goals}"""
-        goals_string = fetch_and_format_data(
-            user_id=st.session_state.user_id,
-            table=GoalsAndDreams,
-            columns=["name"],
-            num_rows=None,
-            random=True,
-        )
-        llm_response = create_llm_content(
-            prompt, {"user": st.session_state.user_name, "goals": goals_string}
-        )
-        st.session_state.gratitude_tasks_welcome = llm_response
+        if "gratitude_tasks_welcome" not in st.session_state:
+            prompt = """You are an empowering life-coach, write 2-3 short sentances for {user} telling explaining the most important part of this AI coaching app.
+            Explain to them that they have to record 5 things they are grateful for every day, and 5 tasks/missions that they would like to complete. The gratitude can be
+            for achievements, people, places, pets, even small things. The tasks should be realted to their goals and dreams which may be listed below {goals}"""
+            goals_string = fetch_and_format_data(
+                user_id=st.session_state.user_id,
+                table=GoalsAndDreams,
+                columns=["name"],
+                num_rows=None,
+                random=True,
+            )
+            llm_response = create_llm_content(
+                prompt, {"user": st.session_state.user_name, "goals": goals_string}
+            )
+            st.session_state.gratitude_tasks_welcome = llm_response
 
     col1, col2 = st.columns(2)
     #

@@ -16,6 +16,7 @@ class Users(Base):
     name = Column(String, unique=True)
     email = Column(String, unique=True)
     password = Column(String(100))  # Hashed password column
+    is_new = Column(Integer, default=1)
 
     # Define the one-to-many relationships
     goals_and_dreams = relationship("GoalsAndDreams", back_populates="users")
@@ -64,7 +65,6 @@ class CurrentProjects(Base):
     entry = Column(String)
     date = Column(Date)
     user_id = Column(Integer, ForeignKey("users.id"))
-
     users = relationship("Users", back_populates="current_projects")
 
 
@@ -84,7 +84,6 @@ class MindState(Base):
     hopes_and_dreams = Column(String)
     skills_and_achievements = Column(String)
     obstacles_and_challenges = Column(String)
-    current_missions = Column(String)
     grateful_for = Column(String)
     current_tasks = Column(String)
     user_id = Column(Integer, ForeignKey("users.id"), unique=True)

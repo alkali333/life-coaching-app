@@ -6,7 +6,9 @@ import os
 import io
 
 
-def text_to_speech(text: str, speed: int = 100, voice: str = "Emma") -> str:
+def text_to_speech(
+    user_id: int, text: str, speed: int = 100, voice: str = "Emma"
+) -> str:
     # Maximum character limit for Polly
     MAX_CHAR_LIMIT = 3000
 
@@ -58,7 +60,12 @@ def text_to_speech(text: str, speed: int = 100, voice: str = "Emma") -> str:
 
     # Save the combined audio to a file
     # this will eventually have to be done properly
-    final_audio_path = "temp.mp3"
+    # Create a directory for the user if it doesn't exist
+    directory = f"user_audio/{user_id}"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    # Save the file in the user's directory
+    final_audio_path = f"{directory}/temp.mp3"
     combined_audio.export(final_audio_path, format="mp3")
 
     return final_audio_path

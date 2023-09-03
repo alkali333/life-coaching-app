@@ -27,7 +27,7 @@ def morning_exercise(user_id: str) -> str:
         template, {"user": user_name, "goals": goals_string}
     )
 
-    audio_path = text_to_speech(llm_response, speed=75, voice="Emma")
+    audio_path = text_to_speech(user_name, llm_response, speed=75, voice="Emma")
 
     return audio_path
 
@@ -61,12 +61,12 @@ def get_your_shit_together(user_id: str) -> str:
         },
     )
 
-    audio_path = text_to_speech(llm_response, speed=125, voice="Matthew")
+    audio_path = text_to_speech(user_name, llm_response, speed=125, voice="Matthew")
 
     return audio_path
 
 
-def motivation_pep_talk(user_id: str) -> str:
+def motivation_pep_talk(user_id: int) -> str:
     template = """\
     Create a motivational speech/pep-talk for the user: {user}. First remind him to be grateful based on this dairy entry {gratitude}. 
 
@@ -90,7 +90,7 @@ def motivation_pep_talk(user_id: str) -> str:
         },
     )
 
-    audio_path = text_to_speech(llm_response, voice="Emma")
+    audio_path = text_to_speech(user_id, llm_response, voice="Emma")
 
     return audio_path
 
@@ -127,6 +127,6 @@ def blow_your_own_trumpet(user_id: str) -> str:
         template, {"user": user_name, "skills": skills_string, "goals": goals_string}
     )
 
-    audio_path = text_to_speech(llm_response, voice="Arthur")
+    audio_path = text_to_speech(user_name, llm_response, voice="Arthur")
 
     return audio_path

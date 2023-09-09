@@ -16,16 +16,16 @@ from models import (
 )
 
 
-from db_helpers import authenticate, diary_updated
-
+from db_helpers import authenticate
 from life_coach import LifeCoach
 from mindstate_service import MindStateService
 from input_summarizer import InputSummarizer
-from exercises import create_random_prompt
+from exercises import create_random_meditation
 from quotes import get_random_quote
 
 
 from polly import text_to_speech
+
 
 load_dotenv(find_dotenv(), override=True)
 
@@ -43,10 +43,10 @@ def refresh_life_coach():
 if "quote" not in st.session_state:
     st.session_state.quote = get_random_quote()
 
-if "current_question" not in st.session_state:
-    st.session_state.current_question = 1
+
 if "is_new" not in st.session_state:
     st.session_state.is_new = False
+
 
 if "user_id" not in st.session_state:
     email = st.sidebar.text_input("Email", value="")
@@ -79,92 +79,123 @@ if "user_id" not in st.session_state:
             st.sidebar.text("Authentication failed. Please check your credentials.")
 else:
     st.header(f"Welcome, {st.session_state.user_name}!")
-    st.write(st.session_state.quote)
+    st.header(st.session_state.quote)
+
+    if "welcome_message" not in st.session_state:
+        with SessionLocal() as db:
+            user_new = (
+                db.query(Users.is_new)
+                .filter(Users.id == st.session_state.user_id)
+                .first()[0]
+            )
+        if user_new == 0:
+            st.session_state.welcome_message = st.session_state.life_coach.create_exercise(
+                """Create an epic poem about the user as if they were a great warrior.
+                    Use the info you have along with a little humour. Give them hope that they
+                    can defeat their obstacles and manifest their hopes and dreams"""
+            )
+        else:
+            st.session_state.welcome_message = (
+                "Welcome! Please use the form to tell me about yourself. "
+            )
+    st.write(st.session_state.welcome_message)
 
     button_placeholder = st.empty()
 
-    intialise = button_placeholder.button("Tell me about yourself")
-    ### For existing users, we can just output the stuff with the mindstate service
-    # what about a new user who doesn't have a mindstate??
-    if intialise or st.session_state.is_new:
-        button_placeholder.empty()
-        with st.form(
-            key="hopes",
-            clear_on_submit=True,
-        ):
+    # initialise current question
+    if "current_question" not in st.session_state:
+        st.session_state.current_question = 1
+
+    st.write(f"debugging: current question is: {st.session_state.current_question}")
+    # show forms to new users, or if they pressed the button
+    if st.session_state.is_new or st.button("Tell me about yourself"):
+        if st.session_state.current_question == 1:
+            with st.form(key="hopes", clear_on_submit=True):
+                st.write(
+                    "Tell me about your hopes and dreams. Don't be afraid to think big. Tell me at least 3."
+                )
+
+                hopes_and_dreams = st.text_area(
+                    label="Your hopes and dreams",
+                    placeholder=st.session_state.mindstate_service.get_hopes_and_dreams(),
+                    height=333,
+                )
+                submit_button = st.form_submit_button("Go")
+
+                if hopes_and_dreams and submit_button:
+                    with st.spinner("Understanding your hopes and dreams.. "):
+                        input_summarizer = InputSummarizer()
+                        response = input_summarizer.summarize(hopes_and_dreams)
+
+                    st.session_state.mindstate_service.populate_mindstate(
+                        info=response.content,
+                        column="hopes_and_dreams",
+                    )
+                    st.session_state.current_question = 2
+                    st.experimental_rerun()
+
+        elif st.session_state.current_question == 2:
+            with st.form(key="skills", clear_on_submit=True):
+                st.write("Tell me about your skills and achievements")
+
+                skills_and_achievements = st.text_area(
+                    label="Your skills and achievements",
+                    placeholder=st.session_state.mindstate_service.get_skills_and_achievements(),
+                    height=333,
+                )
+
+                submit_button = st.form_submit_button("Go")
+
+                if skills_and_achievements and submit_button:
+                    with st.spinner("Learning about your skills and achievements "):
+                        input_summarizer = InputSummarizer()
+                        response = input_summarizer.summarize(skills_and_achievements)
+
+                    st.session_state.mindstate_service.populate_mindstate(
+                        info=response.content,
+                        column="skills_and_achievements",
+                    )
+                    st.session_state.current_question = 3
+                    st.experimental_rerun()
+
+        ### STEP THREE ###
+        elif st.session_state.current_question == 3:
+            st.write("Tell me about your obstacles and challenges")
+            with st.form(key="obstacles", clear_on_submit=True):
+                obstacles_and_challenges = st.text_area(
+                    label="Your obstacles and challenges",
+                    placeholder=st.session_state.mindstate_service.get_obstacles_and_challenges(),
+                    height=333,
+                )
+
+                submit_button = st.form_submit_button("Go")
+
+            if obstacles_and_challenges and submit_button:
+                with st.spinner("Getting to know your obstacles and challenges.... "):
+                    input_summarizer = InputSummarizer()
+                    response = input_summarizer.summarize(obstacles_and_challenges)
+                st.session_state.mindstate_service.populate_mindstate(
+                    info=response.content,
+                    column="obstacles_and_challenges",
+                )
+                st.session_state.current_question = 4
+                st.experimental_rerun()
+
+        elif st.session_state.current_question == 4:
             st.write(
-                "Tell me about your hopes and dreams. Don't be afraid to think big. Tell me at least 3."
+                "Thanks for the info! Now start updating your gratitude diary and task list"
             )
-            st.session_state.hopes_and_dreams = st.text_area(
-                label="Your hopes and dreams",
-                value=st.session_state.mindstate_service.get_hopes_and_dreams(),
-                height=333,
-            )
-            submit_button = st.form_submit_button("Go")
 
-        if st.session_state.hopes_and_dreams and submit_button:
-            with st.spinner("Digesting... "):
-                input_summarizer = InputSummarizer()
-                response = input_summarizer.summarize(st.session_state.hopes_and_dreams)
-
-            st.session_state.mindstate_service.populate_mindstate(
-                info=response.content,
-                column="skills_and_achievements",
-            )
-            st.session_state.current_question = 2
-            st.experimental_rerun()
-
-    ### STEP TWO ###
-    elif st.session_state.current_question == 2:
-        st.write("Tell me about your skills and achievements")
-        with st.form(key="skills", clear_on_submit=True):
-            st.session_state.skills_and_achievements = st.text_area(
-                label="Your skills and achievements",
-                value=st.session_state.mindstate_service.get_skills_and_achievements(),
-                height=333,
-            )
-            submit_button = st.form_submit_button("Go")
-
-        if st.session_state.skills_and_achievements and submit_button:
-            with st.spinner("Loading Summary... "):
-                input_summarizer = InputSummarizer()
-                response = input_summarizer.summarize(
-                    st.session_state.skills_and_achievements
+            # at the end of the three steps, if the user is new, mark
+            # them as no longer new
+            with SessionLocal() as db:
+                user_query = db.query(Users).filter(
+                    Users.id == st.session_state.user_id
                 )
-
-            st.session_state.mindstate_service.populate_mindstate(
-                info=response.content,
-                column="skills_and_achievements",
-            )
-            st.session_state.current_question = 3
-            st.experimental_rerun()
-
-    ### STEP THREE ###
-    elif st.session_state.current_question == 3:
-        st.write("Tell me about your obstacles and challenges")
-        with st.form(key="obstacles", clear_on_submit=True):
-            st.session_state.obstacles_and_challenges = st.text_area(
-                label="Your obstacles and challenges",
-                value=st.session_state.mindstate_service.get_obstacles_and_challenges(),
-                height=333,
-            )
-            submit_button = st.form_submit_button("Go")
-
-        if st.session_state.obstacles_and_challenges and submit_button:
-            with st.spinner("Loading Summary... "):
-                input_summarizer = InputSummarizer()
-                response = input_summarizer.summarize(
-                    st.session_state.obstacles_and_challenges
-                )
-            st.session_state.mindstate_service.populate_mindstate(
-                info=response.content,
-                column="skills_and_achievements",
-            )
-            st.session_state.current_question = 4
-            st.experimental_rerun()
-
-    elif st.session_state.current_question == 4:
-        st.write("Thanks for the info!")
+                user = user_query.one_or_none()
+                if user and user.is_new == 1:
+                    user.is_new = 0
+                    db.commit()
 
     col3, col4 = st.columns(2)
     #
@@ -181,11 +212,13 @@ else:
                     .first()
                 )
 
-            st.write(f"Your most recent entry: \n\n{latest_entry[0]}")
+            st.write(
+                f"Your most recent entry: \n\n{latest_entry[0] or 'No entries yet! Please update to access them meditations'}"
+            )
 
         # Form to add new entries
         with st.form(key="gratitude_journal", clear_on_submit=True):
-            entry = st.text_area("Entry", on_change=refresh_life_coach())
+            entry = st.text_area("Entry")
             submit_button = st.form_submit_button(label="Submit")
             if submit_button:
                 with SessionLocal() as session:
@@ -209,11 +242,13 @@ else:
                     .filter(MindState.user_id == st.session_state.user_id)
                     .first()
                 )
-            st.write(f"Your most recent entry: \n\n{current_tasks[0]}")
+            st.write(
+                f"Your most recent entry: \n\n{current_tasks[0] or 'No entries yet! Please update to access them meditations'}"
+            )
 
         # Form to add new entries
         with st.form(key="current tasks", clear_on_submit=True):
-            entry = st.text_area("Entry", on_change=refresh_life_coach())
+            entry = st.text_area("Entry")
             submit_button = st.form_submit_button(label="Submit")
             if submit_button:
                 with SessionLocal() as session:
@@ -226,24 +261,29 @@ else:
 
     st.write("\n\n" * 11)
     st.write("-" * 777)
-    if diary_updated(st.session_state.user_id):
+    if st.session_state.mindstate_service.was_updated_recently():
         st.write(
-            "Well done for keeping your gratitude journal and daily missions log up to date. You can now access the exercises and pep talks!"
+            f"Well done for keeping your gratitude journal and daily missions log up to date. You can now access the exercises and pep talks!"
         )
-        col5, col6 = st.columns(2)
+
+        text_placeholder = st.empty()
+        audio_placeholder = st.empty()
+        download_placeholder = st.empty()
+
+        col5, col6, col7 = st.columns(3)
         with col5:
             if st.button("Random Exercise"):
-                query = create_random_prompt()
+                query = create_random_meditation("misc")
                 response = st.session_state.life_coach.create_exercise(query=query)
-                st.write(f"Exercise: {response}")
+                # text_placeholder.write(f"Exercise: {response}")
                 audio_path = text_to_speech(
                     user_id=st.session_state.user_id, text=response
                 )
-                st.audio(audio_path)
+                audio_placeholder.audio(audio_path)
                 with open(audio_path, "rb") as file:
                     file_bytes = file.read()
 
-                st.download_button(
+                download_placeholder.download_button(
                     label="Download",
                     data=file_bytes,
                     file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
@@ -261,21 +301,98 @@ else:
                 response = st.session_state.life_coach.create_exercise(
                     coach_info=coach_info, query=query
                 )
-                st.write(f"Exercise: {response}")
+                # text_placeholder.write(f"Exercise: {response}")
                 audio_path = text_to_speech(
                     user_id=st.session_state.user_id, text=response
                 )
-                st.audio(audio_path)
+                audio_placeholder.audio(audio_path)
                 with open(audio_path, "rb") as file:
                     file_bytes = file.read()
 
-                st.download_button(
+                download_placeholder.download_button(
                     label="Download",
                     data=file_bytes,
                     file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
                     mime="audio/mpeg",
                 )
-        #
+        with col7:
+            if st.button("Manifest Your Dreams"):
+                query = create_random_meditation("hopes_and_dreams")
+
+                response = st.session_state.life_coach.create_exercise(query=query)
+                # text_placeholder.write(f"Exercise: {response}")
+                audio_path = text_to_speech(
+                    user_id=st.session_state.user_id, text=response
+                )
+                audio_placeholder.audio(audio_path)
+                with open(audio_path, "rb") as file:
+                    file_bytes = file.read()
+
+                download_placeholder.download_button(
+                    label="Download",
+                    data=file_bytes,
+                    file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+                    mime="audio/mpeg",
+                )
+        col9, col10, col11 = st.columns(3)
+        with col9:
+            if st.button("Boost your self-esteem"):
+                query = create_random_meditation("skills_and_achievements")
+
+                response = st.session_state.life_coach.create_exercise(query=query)
+                text_placeholder.write(f"Exercise: {response}")
+                audio_path = text_to_speech(
+                    user_id=st.session_state.user_id, text=response
+                )
+                audio_placeholder.audio(audio_path)
+                with open(audio_path, "rb") as file:
+                    file_bytes = file.read()
+
+                download_placeholder.download_button(
+                    label="Download",
+                    data=file_bytes,
+                    file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+                    mime="audio/mpeg",
+                )
+        with col10:
+            if st.button("Self-EMPOWERMENT!"):
+                query = create_random_meditation("empowerment")
+
+                response = st.session_state.life_coach.create_exercise(query=query)
+                text_placeholder.write(f"Exercise: {response}")
+                audio_path = text_to_speech(
+                    user_id=st.session_state.user_id, text=response
+                )
+                audio_placeholder.audio(audio_path)
+                with open(audio_path, "rb") as file:
+                    file_bytes = file.read()
+
+                download_placeholder.download_button(
+                    label="Download",
+                    data=file_bytes,
+                    file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+                    mime="audio/mpeg",
+                )
+        with col11:
+            if st.button("Get things done!"):
+                query = create_random_meditation("current_tasks")
+
+                response = st.session_state.life_coach.create_exercise(query=query)
+                text_placeholder.write(f"Exercise: {response}")
+                audio_path = text_to_speech(
+                    user_id=st.session_state.user_id, text=response
+                )
+                audio_placeholder.audio(audio_path)
+                with open(audio_path, "rb") as file:
+                    file_bytes = file.read()
+
+                download_placeholder.download_button(
+                    label="Download",
+                    data=file_bytes,
+                    file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+                    mime="audio/mpeg",
+                )
+
         ################## COACHING SESSIONS
         #
 

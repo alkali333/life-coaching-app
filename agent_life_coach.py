@@ -8,6 +8,14 @@ from langchain.schema import SystemMessage
 from langchain.agents import OpenAIFunctionsAgent, AgentExecutor, Tool
 
 
+# the tool functions will have to to inside init
+# the agent class will have access to a dict representing the clients
+# mindstate, and a set of tools for accessing each one.
+# this means the agent will be able to work with a much larger
+# data set when interacting with the user, pulling in what is needed
+# as necessary.
+
+
 with SessionLocal() as db:
     m_s_s = MindStateService(user_id=1, db=db)
 
@@ -18,7 +26,7 @@ tools = [
         description="Useful when looking up the hopes and dreams of a client",
     ),
     Tool(
-        name="Get Skills And Avhievements()",
+        name="Get Skills And Achievements()",
         func=m_s_s.get_skills_and_achievements(),
         description="Useful when looking up the skills and achievements of a client",
     ),

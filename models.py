@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
-
+from sqlalchemy import DateTime
 
 Base = declarative_base()
 
@@ -18,54 +18,8 @@ class Users(Base):
     password = Column(String(100))  # Hashed password column
     is_new = Column(Integer, default=1)
 
-    # Define the one-to-many relationships
-    goals_and_dreams = relationship("GoalsAndDreams", back_populates="users")
-    powers_and_achievements = relationship(
-        "PowersAndAchievements", back_populates="users"
-    )
-    gratitude_journal = relationship("GratitudeJournal", back_populates="users")
-    current_projects = relationship("CurrentProjects", back_populates="users")
     diary = relationship("Diary", back_populates="users")
     mind_state = relationship("MindState", back_populates="users")
-
-
-class GoalsAndDreams(Base):
-    __tablename__ = "goals_and_dreams"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    description = Column(String)
-    user_id = Column(Integer, ForeignKey("users.id"))
-
-    users = relationship("Users", back_populates="goals_and_dreams")
-
-
-class PowersAndAchievements(Base):
-    __tablename__ = "powers_and_achievements"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    description = Column(String)
-    user_id = Column(Integer, ForeignKey("users.id"))
-
-    users = relationship("Users", back_populates="powers_and_achievements")
-
-
-class GratitudeJournal(Base):
-    __tablename__ = "gratitude_journal"
-    id = Column(Integer, primary_key=True, index=True)
-    entry = Column(String)
-    date = Column(Date)
-    user_id = Column(Integer, ForeignKey("users.id"))
-
-    users = relationship("Users", back_populates="gratitude_journal")
-
-
-class CurrentProjects(Base):
-    __tablename__ = "current_projects"
-    id = Column(Integer, primary_key=True, index=True)
-    entry = Column(String)
-    date = Column(Date)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    users = relationship("Users", back_populates="current_projects")
 
 
 class Diary(Base):
@@ -87,30 +41,11 @@ class MindState(Base):
     grateful_for = Column(String)
     current_tasks = Column(String)
     user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    timestamp = Column(DateTime)
 
     users = relationship("Users", back_populates="mind_state")
 
 
-# class Obstacles(Base):
-#     __tablename__ = 'obstacles'
-#     id = Column(Integer, primary_key=True, index=True)
-#     name = Column(String)
-#     cause = Column(String)
-
-
-# class VentingJournal(Base):
-#     __tablename__ = 'venting_journal'
-#     id = Column(Integer, primary_key=True, index=True)
-#     entry = Column(String)
-#     date = Column(Date)
-
-# class Tools(Base):
-#     __tablename__ = 'tools'
-#     id = Column(Integer, primary_key=True, index=True)
-#     name = Column(String)
-#     description = Column(String)
-
-# Ensure the directory exists
 DATABASE_DIR = "database"
 if not os.path.exists(DATABASE_DIR):
     os.makedirs(DATABASE_DIR)

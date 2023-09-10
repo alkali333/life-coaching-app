@@ -25,7 +25,6 @@ load_dotenv()
 class LifeCoach:
     client_name: str
     mindstate: str = "no mindstate initialised"
-    query: str
     llm: ChatModel
 
     def __init__(self, mindstate: str, llm: ChatModel = None) -> None:
@@ -50,8 +49,6 @@ class LifeCoach:
         formatted_message = prompt.format_prompt(
             coach_info=coach_info, mindstate=self.mindstate
         )
-        print(f"System Prompt: {formatted_message}/n/n/n")
-        print(f"System Prompt: {formatted_message}/n/n/n")
 
         llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.7, max_tokens=1024)
 

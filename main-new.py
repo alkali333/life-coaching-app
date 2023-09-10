@@ -6,6 +6,7 @@ from datetime import date, datetime
 from dotenv import load_dotenv, find_dotenv
 import pandas as pd
 from sqlalchemy import desc
+import random
 
 # My imports
 from models import (
@@ -89,15 +90,27 @@ else:
                 .first()[0]
             )
         if user_new == 0:
-            st.session_state.welcome_message = st.session_state.life_coach.create_exercise(
+            prompts = [
                 """Create an epic poem about the user as if they were a great warrior.
-                    Use the info you have along with a little humour. Give them hope that they
-                    can defeat their obstacles and manifest their hopes and dreams"""
+            Use the info you have along with a little humour. Give them hope that they
+            can defeat their obstacles and manifest their hopes and dreams""",
+                """Recommend 3 random life-coaching exercises that will help them based on the user info """,
+                """Remind the client of the things they are grateful for and their skills and achievements""",
+                """Offer the client some exercises they can do today to overcome their obstacles and challenges""",
+                """Write a humourous epic fantasy/sci-fi adventure in a world of talking animals, robots, 
+                technology and magic. Make the client the main character (pick an unusual animal with strange characteristics) is a story that has them use their skills
+                and achievements to overcome their obstacles and challenges and reach all their hopes and dreams""",
+            ]
+
+            st.session_state.welcome_message = (
+                st.session_state.life_coach.create_exercise(random.choice(prompts))
             )
         else:
-            st.session_state.welcome_message = (
-                "Welcome! Please use the form to tell me about yourself. "
-            )
+            with st.spinner("Loading your welcome message"):
+                st.session_state.welcome_message = (
+                    "Welcome! Please use the form to tell me about yourself. "
+                )
+
     st.write(st.session_state.welcome_message)
 
     button_placeholder = st.empty()

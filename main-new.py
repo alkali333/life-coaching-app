@@ -44,9 +44,8 @@ def refresh_life_coach():
 if "quote" not in st.session_state:
     st.session_state.quote = get_random_quote()
 
-
-if "is_new" not in st.session_state:
-    st.session_state.is_new = False
+if "new_user" not in st.session_state:
+    st.session_state.new_user = False
 
 
 if "user_id" not in st.session_state:
@@ -63,6 +62,9 @@ if "user_id" not in st.session_state:
             st.session_state.user_id = user_in_db.id
             # store user name
             st.session_state.user_name = user_in_db.name
+            # record if the user is new
+            st.session_state.new_user = bool(user_in_db.is_new)
+
             # store mindstate service (so we can update and display MindState)
             st.session_state.mindstate_service = MindStateService(
                 user_id=st.session_state.user_id, db=session
@@ -70,46 +72,45 @@ if "user_id" not in st.session_state:
 
             # load the mindstate as json string
             user_mindstate = st.session_state.mindstate_service.to_json()
-            st.session_state.life_coach = LifeCoach(user_mindstate)
 
-            # record if the user is new
-            if user_in_db.is_new == 1:
-                st.session_state.is_new = True
+            # create lifecoach
+            st.session_state.life_coach = LifeCoach(user_mindstate)
 
         else:
             st.sidebar.text("Authentication failed. Please check your credentials.")
 else:
-    st.header(f"Welcome, {st.session_state.user_name}!")
-    st.header(st.session_state.quote)
+    st.header("Atenshun v0.3 :black_heart: :brain: :old_key: ")
+
+    st.write(
+        f"<strong>Welcome, {st.session_state.user_name}!</strong>",
+        unsafe_allow_html=True,
+    )
+    st.write(f"{st.session_state.quote}")
 
     if "welcome_message" not in st.session_state:
-        with SessionLocal() as db:
-            user_new = (
-                db.query(Users.is_new)
-                .filter(Users.id == st.session_state.user_id)
-                .first()[0]
-            )
-        if user_new == 0:
+        # sets the welcome message to generic or customised depending on if the user is new
+        if st.session_state.new_user:
+            with st.spinner("Loading your welcome message"):
+                st.session_state.welcome_message = (
+                    "Welcome! Please use the form to tell me about yourself. "
+                )
+        else:
+            #
             prompts = [
                 """Create an epic poem about the user as if they were a great warrior.
-            Use the info you have along with a little humour. Give them hope that they
-            can defeat their obstacles and manifest their hopes and dreams""",
+                    Use the info you have along with a little humour. Give them hope that they
+                    can defeat their obstacles and manifest their hopes and dreams""",
+                """give the user 5 missions for today that will help them achieve their hopes and dreams, they can be small simple tasks""",
                 """Recommend 3 random life-coaching exercises that will help them based on the user info """,
-                """Remind the client of the things they are grateful for and their skills and achievements""",
                 """Offer the client some exercises they can do today to overcome their obstacles and challenges""",
                 """Write a humourous epic fantasy/sci-fi adventure in a world of talking animals, robots, 
-                technology and magic. Make the client the main character (pick an unusual animal with strange characteristics) is a story that has them use their skills
-                and achievements to overcome their obstacles and challenges and reach all their hopes and dreams""",
+                    technology and magic. Make the client the main character (pick an unusual animal with strange characteristics) is a story that has them use their skills
+                    and achievements to overcome their obstacles and challenges and reach all their hopes and dreams""",
             ]
 
             st.session_state.welcome_message = (
                 st.session_state.life_coach.create_exercise(random.choice(prompts))
             )
-        else:
-            with st.spinner("Loading your welcome message"):
-                st.session_state.welcome_message = (
-                    "Welcome! Please use the form to tell me about yourself. "
-                )
 
     st.write(st.session_state.welcome_message)
 
@@ -117,107 +118,138 @@ else:
 
     # initialise current question
     if "current_question" not in st.session_state:
-        st.session_state.current_question = 1
+        if st.session_state.new_user:
+            st.session_state.current_question = 1
+        else:
+            st.session_state.current_question = 0
 
-    st.write(f"debugging: current question is: {st.session_state.current_question}")
-    # show forms to new users, or if they pressed the button
-    if st.session_state.is_new or st.button("Tell me about yourself"):
-        if st.session_state.current_question == 1:
-            with st.form(key="hopes", clear_on_submit=True):
-                st.write(
-                    "Tell me about your hopes and dreams. Don't be afraid to think big. Tell me at least 3."
-                )
+    st.write(
+        f"debugging: current question is: {st.session_state.current_question} new user: {st.session_state.new_user}"
+    )
 
-                hopes_and_dreams = st.text_area(
-                    label="Your hopes and dreams",
-                    placeholder=st.session_state.mindstate_service.get_hopes_and_dreams(),
-                    height=333,
-                )
-                submit_button = st.form_submit_button("Go")
+    if st.session_state.current_question == 0:
+        st.write(
+            "Change is good. If you would like to tell me about yourself again, go ahead!"
+        )
+        with st.form(key="start"):
+            submit_button = st.form_submit_button("Tell me about yourself")
+        if submit_button:
+            st.session_state.current_question = 1
+            st.experimental_rerun()
+    if st.session_state.current_question == 1:
+        with st.form(key="hopes", clear_on_submit=True):
+            st.write(
+                "Let's get started. Tell me about your hopes and dreams. Don't be afraid to think big. Tell me at least 3."
+            )
 
-                if hopes_and_dreams and submit_button:
-                    with st.spinner("Understanding your hopes and dreams.. "):
-                        input_summarizer = InputSummarizer()
-                        response = input_summarizer.summarize(hopes_and_dreams)
+            hopes_and_dreams = st.text_area(
+                label="Your hopes and dreams",
+                placeholder=st.session_state.mindstate_service.get_hopes_and_dreams(),
+                height=333,
+            )
+            submit_button = st.form_submit_button("Next")
 
-                    st.session_state.mindstate_service.populate_mindstate(
-                        info=response.content,
-                        column="hopes_and_dreams",
-                    )
-                    st.session_state.current_question = 2
-                    st.experimental_rerun()
-
-        elif st.session_state.current_question == 2:
-            with st.form(key="skills", clear_on_submit=True):
-                st.write("Tell me about your skills and achievements")
-
-                skills_and_achievements = st.text_area(
-                    label="Your skills and achievements",
-                    placeholder=st.session_state.mindstate_service.get_skills_and_achievements(),
-                    height=333,
-                )
-
-                submit_button = st.form_submit_button("Go")
-
-                if skills_and_achievements and submit_button:
-                    with st.spinner("Learning about your skills and achievements "):
-                        input_summarizer = InputSummarizer()
-                        response = input_summarizer.summarize(skills_and_achievements)
-
-                    st.session_state.mindstate_service.populate_mindstate(
-                        info=response.content,
-                        column="skills_and_achievements",
-                    )
-                    st.session_state.current_question = 3
-                    st.experimental_rerun()
-
-        ### STEP THREE ###
-        elif st.session_state.current_question == 3:
-            st.write("Tell me about your obstacles and challenges")
-            with st.form(key="obstacles", clear_on_submit=True):
-                obstacles_and_challenges = st.text_area(
-                    label="Your obstacles and challenges",
-                    placeholder=st.session_state.mindstate_service.get_obstacles_and_challenges(),
-                    height=333,
-                )
-
-                submit_button = st.form_submit_button("Go")
-
-            if obstacles_and_challenges and submit_button:
-                with st.spinner("Getting to know your obstacles and challenges.... "):
+            if hopes_and_dreams and submit_button:
+                with st.spinner("Understanding your hopes and dreams.. "):
                     input_summarizer = InputSummarizer()
-                    response = input_summarizer.summarize(obstacles_and_challenges)
+                    response = input_summarizer.summarize(hopes_and_dreams)
+
                 st.session_state.mindstate_service.populate_mindstate(
                     info=response.content,
-                    column="obstacles_and_challenges",
+                    column="hopes_and_dreams",
                 )
+                st.session_state.current_question = 2
+                st.experimental_rerun()
+
+    elif st.session_state.current_question == 2:
+        with st.form(key="skills", clear_on_submit=True):
+            st.write("Tell me about your skills and achievements")
+
+            skills_and_achievements = st.text_area(
+                label="Your skills and achievements",
+                placeholder=st.session_state.mindstate_service.get_skills_and_achievements(),
+                height=333,
+            )
+
+            submit_button = st.form_submit_button("Next")
+
+            if skills_and_achievements and submit_button:
+                with st.spinner("Learning about your skills and achievements "):
+                    input_summarizer = InputSummarizer()
+                    response = input_summarizer.summarize(skills_and_achievements)
+
+                st.session_state.mindstate_service.populate_mindstate(
+                    info=response.content,
+                    column="skills_and_achievements",
+                )
+                st.session_state.current_question = 3
+                st.experimental_rerun()
+
+    ### STEP THREE ###
+    elif st.session_state.current_question == 3:
+        st.write("Tell me about your obstacles and challenges")
+        with st.form(key="obstacles", clear_on_submit=True):
+            obstacles_and_challenges = st.text_area(
+                label="Your obstacles and challenges",
+                placeholder=st.session_state.mindstate_service.get_obstacles_and_challenges(),
+                height=333,
+            )
+
+            submit_button = st.form_submit_button("Go")
+
+        if obstacles_and_challenges and submit_button:
+            with st.spinner("Getting to know your obstacles and challenges.... "):
+                input_summarizer = InputSummarizer()
+                response = input_summarizer.summarize(obstacles_and_challenges)
+            st.session_state.mindstate_service.populate_mindstate(
+                info=response.content,
+                column="obstacles_and_challenges",
+            )
+            print("Obstacles and challenges updated")
+            with SessionLocal() as session:
+                # Get the user instance
+                user = (
+                    session.query(Users)
+                    .filter(Users.id == st.session_state.user_id)
+                    .one()
+                )
+                # reset the life coach to have the new info
+                refresh_life_coach()
+                print(f"Form finished, user:{user} retrieved from the database")
+
+                if user.is_new == 1:
+                    print("User is new, setting user to not new....")
+                    user.is_new = 0
+                    session.commit()
+
+                    # Fetch the user again to confirm the update
+                    user_after_update = (
+                        session.query(Users)
+                        .filter(Users.id == st.session_state.user_id)
+                        .one()
+                    )
+                    if user_after_update.is_new == 0:
+                        print("Successfully updated user to not new in the database.")
+                        st.session_state.new_user = False
+                    else:
+                        print("Failed to update user status in the database.")
+                else:
+                    print("User is already not new.")
+
                 st.session_state.current_question = 4
                 st.experimental_rerun()
 
-        elif st.session_state.current_question == 4:
-            st.write(
-                "Thanks for the info! Now start updating your gratitude diary and task list"
-            )
-
-            # at the end of the three steps, if the user is new, mark
-            # them as no longer new
-            with SessionLocal() as db:
-                user_query = db.query(Users).filter(
-                    Users.id == st.session_state.user_id
-                )
-                user = user_query.one_or_none()
-                if user and user.is_new == 1:
-                    user.is_new = 0
-                    db.commit()
+    elif st.session_state.current_question == 4:
+        st.write(
+            "Thanks for the info! Now start updating your gratitude diary and task list"
+        )
 
     col3, col4 = st.columns(2)
     #
     ################## GRATITUDE JOURNAL
-    #
-    with col3:
-        st.subheader("Gratitude Journal")
-        # Display existing data
-        if not st.session_state.is_new:
+    if not st.session_state.new_user:
+        with col3:
+            st.subheader("Gratitude Journal")
             with SessionLocal() as session:
                 latest_entry = (
                     session.query(MindState.grateful_for)
@@ -229,26 +261,25 @@ else:
                 f"Your most recent entry: \n\n{latest_entry[0] or 'No entries yet! Please update to access them meditations'}"
             )
 
-        # Form to add new entries
-        with st.form(key="gratitude_journal", clear_on_submit=True):
-            entry = st.text_area("Entry")
-            submit_button = st.form_submit_button(label="Submit")
-            if submit_button:
-                with SessionLocal() as session:
-                    st.session_state.mindstate_service.populate_mindstate(
-                        info=entry,
-                        column="grateful_for",
-                    )
-                    refresh_life_coach()
-                    st.experimental_rerun()  # Rerun the app to refresh the data
+            # Form to add new entries
+            with st.form(key="gratitude_journal", clear_on_submit=True):
+                entry = st.text_area("Entry")
+                submit_button = st.form_submit_button(label="Submit")
+                if submit_button:
+                    with SessionLocal() as session:
+                        st.session_state.mindstate_service.populate_mindstate(
+                            info=entry,
+                            column="grateful_for",
+                        )
+                        refresh_life_coach()
+                        st.experimental_rerun()  # Rerun the app to refresh the data
 
-    #
-    ################## CURRENT TASKS
-    #
-    with col4:
-        st.subheader("Current Missions")
-        # Display existing data
-        if not st.session_state.is_new:
+        #
+        ################## CURRENT TASKS
+        #
+        with col4:
+            st.subheader("Current Missions")
+            # Display existing data
             with SessionLocal() as session:
                 current_tasks = (
                     session.query(MindState.current_tasks)
@@ -259,18 +290,18 @@ else:
                 f"Your most recent entry: \n\n{current_tasks[0] or 'No entries yet! Please update to access them meditations'}"
             )
 
-        # Form to add new entries
-        with st.form(key="current tasks", clear_on_submit=True):
-            entry = st.text_area("Entry")
-            submit_button = st.form_submit_button(label="Submit")
-            if submit_button:
-                with SessionLocal() as session:
-                    st.session_state.mindstate_service.populate_mindstate(
-                        info=entry,
-                        column="current_tasks",
-                    )
-                    refresh_life_coach()
-                    st.experimental_rerun()  # Rerun the app to refresh the data
+            # Form to add new entries
+            with st.form(key="current tasks", clear_on_submit=True):
+                entry = st.text_area("Entry")
+                submit_button = st.form_submit_button(label="Submit")
+                if submit_button:
+                    with SessionLocal() as session:
+                        st.session_state.mindstate_service.populate_mindstate(
+                            info=entry,
+                            column="current_tasks",
+                        )
+                        refresh_life_coach()
+                        st.experimental_rerun()  # Rerun the app to refresh the data
 
     st.write("\n\n" * 11)
     st.write("-" * 777)
@@ -305,11 +336,11 @@ else:
         with col6:
             if st.button("No Nonsense Pep Talk"):
                 coach_info = """You are hard-hitting, no nonsense drill sergeant, like the one out of full metal jacket, very strict, you don't mince your words!
-                            You don't want your solider to end up as a pathetic loser, you are going to shout at them until they get their act together! 
-                            You will be asked to create exercises for the user, based only on the information provided below in JSON. Use their name in the exercises. """
+                                You don't want your solider to end up as a pathetic loser, you are going to shout at them until they get their act together! 
+                                You will be asked to create exercises for the user, based only on the information provided below in JSON. Use their name in the exercises. """
 
                 query = """Create a motivational talk for the user, explaining them how important it is to get their current tasks done. Point out to them that the tasks
-                are essential if they are going to fulfill their hopes and dreams """
+                    are essential if they are going to fulfill their hopes and dreams """
 
                 response = st.session_state.life_coach.create_exercise(
                     coach_info=coach_info, query=query
@@ -427,10 +458,10 @@ else:
 
             system_message = f"""You are a life coach, guiding a client, {st.session_state.user_name}, through a goal-setting exercise using the SMART framework.
 
-            The goal is:{goal_string}
+                The goal is:{goal_string}
 
-            You will guide the user through each of the 5 steps separately for their goal. So first you will ask them to make their goals specific and so on.
-            Once you have made the final summary of the SMART steps, don't ask any more questions but provide a lists of tasks for the user based on their responses and your insights """
+                You will guide the user through each of the 5 steps separately for their goal. So first you will ask them to make their goals specific and so on.
+                Once you have made the final summary of the SMART steps, don't ask any more questions but provide a lists of tasks for the user based on their responses and your insights """
 
             st.session_state.messages.append(SystemMessage(content=system_message))
             st.session_state.messages.append(HumanMessage(content="Let's get started"))
@@ -462,7 +493,7 @@ else:
                 final_message = (
                     final_message
                     + """ . Remember, you can add this list of suggestions to
-                your current task diary above. Keep your diaries updated to access these coaching exercises."""
+                    your current task diary above. Keep your diaries updated to access these coaching exercises."""
                 )
 
             st.write(f"MESSAGE COUNTER: {len(st.session_state.messages)}")
@@ -488,7 +519,7 @@ else:
 
     st.write(
         """This is your diary, you can write whatever you want here. Thoughs, hopes, fears, your progress - random nonsense. 
-             Don't worry, you don't have to read it, but your army of AI coaches may take a look to keep you on track!"""
+                Don't worry, you don't have to read it, but your army of AI coaches may take a look to keep you on track!"""
     )
 
     with st.form(key="diary", clear_on_submit=True):
@@ -505,4 +536,3 @@ else:
                 session.add(new_entry)
                 session.commit()
             st.write("Diary Updated!")
-90

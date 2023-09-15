@@ -16,13 +16,13 @@ class Users(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True)
+    name = Column(String)
     email = Column(String, unique=True)
     password = Column(String(256))  # Hashed password column
     is_new = Column(Integer, default=1)
 
-    diary = relationship("Diary", back_populates="users")
-    mind_state = relationship("MindState", back_populates="users")
+    diary = relationship("Diary", back_populates="user")
+    mind_state = relationship("MindState", back_populates="user")
 
 
 class Diary(Base):
@@ -30,9 +30,9 @@ class Diary(Base):
     id = Column(Integer, primary_key=True, index=True)
     entry = Column(String)
     date = Column(Date)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
 
-    users = relationship("Users", back_populates="diary")
+    user = relationship("Users", back_populates="diary")
 
 
 class MindState(Base):
@@ -43,10 +43,10 @@ class MindState(Base):
     obstacles_and_challenges = Column(String)
     grateful_for = Column(String)
     current_tasks = Column(String)
-    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True)
     timestamp = Column(DateTime)
 
-    users = relationship("Users", back_populates="mind_state")
+    user = relationship("Users", back_populates="mind_state")
 
 
 SQLALCHEMY_DATABASE_URL = f'postgresql://{os.getenv("DATABASE_USERNAME")}:{os.getenv("DATABASE_PASSWORD")}@{os.getenv("DATABASE_HOSTNAME")}:{os.getenv("DATABASE_PORT")}/{os.getenv("DATABASE_NAME")}'

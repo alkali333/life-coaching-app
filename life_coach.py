@@ -50,14 +50,12 @@ class LifeCoach:
             coach_info=coach_info, mindstate=self.mindstate
         )
 
-        llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.7, max_tokens=1024)
-
         messages = [
             SystemMessage(content=str(formatted_message)),
             HumanMessage(content=query),
         ]
 
-        response = llm(messages)
+        response = self.llm(messages)
         return response.content
 
     def reset_mindstate(self, new_mindstate: str):

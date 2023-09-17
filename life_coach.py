@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
-
+import json
 
 # langchain imports
 from langchain.chat_models import ChatOpenAI
@@ -10,6 +10,7 @@ from langchain.schema import HumanMessage, SystemMessage
 from langchain.output_parsers import PydanticOutputParser
 
 from typing import Protocol, List, Any
+from langchain.agents import OpenAIFunctionsAgent, AgentExecutor, Tool, tool
 
 
 class ChatModel(Protocol):
@@ -23,7 +24,6 @@ load_dotenv()
 
 
 class LifeCoach:
-    client_name: str
     mindstate: str = "no mindstate initialised"
     llm: ChatModel
 
@@ -57,6 +57,62 @@ class LifeCoach:
 
         response = self.llm(messages)
         return response.content
+
+    def create_exercise_agent(
+        self, query: str, coach_info: str = "You are a life coach"
+    ) -> str:
+        @tool
+        def get_hopes_and_dreams() -> str:
+            """Useful when looking up the clients hopes and dreams"""
+            return json.loads(self.mindstate)["MindState"]["hopes and dreams"]
+
+        @tool
+        def get_skills_and_achievements() -> str:
+            """Useful when looking up the clients skills and achievements"""
+            return json.loads(self.mindstate)["MindState"]["skills and achievements"]
+
+        @tool
+        def get_obstacles_and_challenges() -> str:
+            """Useful when looking up the clients obstacles and challenges"""
+            return json.loads(self.mindstate)["MindState"]["obstacles and challenges"]
+
+        @tool
+        def get_grateful_for() -> str:
+            """Useful when looking up the things the client is grateful for"""
+            return json.loads(self.mindstate)["MindState"]["grateful for"]
+
+        @tool
+        def get_current_tasks() -> str:
+            """Useful when looking up the clients current tasks"""
+            return json.loads(self.mindstate)["MindState"]["current tasks"]
+
+        tools = [
+            get_hopes_and_dreams,
+            get_skills_and_achievements,
+            get_obstacles_and_challenges,
+            get_grateful_for,
+            get_current_tasks,
+        ]
+
+        llm = self.llm
+
+        # With GPT 3.5, it does not always use a tool with this prompt unless you make it very
+        # clear in the query, e.g. "Look up the clients obstacles and challenges then create a guided meditation"
+        system_message = SystemMessage(
+            content=f"""{coach_info}  You will be asked to create exercises for the client.   \n\n
+                You don't know anything about the client and will need to use the tools to look up their info. 
+                Don't use numbers or headings, just prose, as if the user was listening to you speak. 
+                Around 500 words.
+                You can only create exercises if you have information about the client.
+                """
+        )
+        prompt = OpenAIFunctionsAgent.create_prompt(system_message=system_message)
+
+        agent = OpenAIFunctionsAgent(llm=llm, tools=tools, prompt=prompt)
+        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+        agent_response = agent_executor.run(query)
+
+        return agent_response
 
     def reset_mindstate(self, new_mindstate: str):
         self.mindstate = new_mindstate

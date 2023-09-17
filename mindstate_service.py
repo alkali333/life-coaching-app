@@ -32,6 +32,10 @@ class MindStateService:
         data = {"Client Name": self.user_name, "MindState": {}}
 
         for column in MindState.__table__.columns:
+            # Skip the user_id and timestamp columns
+            if column.name in ["user_id", "timestamp"]:
+                continue
+
             col_name = column.name.replace("_", " ")
             col_value = getattr(self.mind_state, column.name)
             if col_value:

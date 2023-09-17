@@ -1,11 +1,10 @@
-from langchain.agents import tool
 from mindstate_service import MindStateService
 from models import SessionLocal
 from dotenv import load_dotenv
 
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import SystemMessage
-from langchain.agents import OpenAIFunctionsAgent, AgentExecutor, Tool
+from langchain.agents import OpenAIFunctionsAgent, AgentExecutor, Tool, tool
 
 
 # the tool functions will have to to inside init
@@ -19,33 +18,56 @@ from langchain.agents import OpenAIFunctionsAgent, AgentExecutor, Tool
 with SessionLocal() as db:
     m_s_s = MindStateService(user_id=1, db=db)
 
+
+# tools can return direct! So they can break the agent loop.
+@tool
+def get_hopes_and_dreams() -> str:
+    """Useful when looking up the clients hopes and dreams"""
+    with SessionLocal() as db:
+        mss = MindStateService(user_id=1, db=db)
+    return mss.get_hopes_and_dreams()
+
+
+@tool
+def get_skills_and_achievements() -> str:
+    """Useful when looking up a client's skills and achievements"""
+    with SessionLocal() as db:
+        mss = MindStateService(user_id=1, db=db)
+    return mss.get_skills_and_achievements()
+
+
+@tool
+def get_obstacles_and_challenges() -> str:
+    """Useful when looking up a client's obstacles and challenges"""
+    with SessionLocal() as db:
+        mss = MindStateService(user_id=1, db=db)
+    return mss.get_obstacles_and_challenges()
+
+
+@tool
+def get_grateful_for() -> str:
+    """Useful when looking up what the client is grateful for"""
+    with SessionLocal() as db:
+        mss = MindStateService(user_id=1, db=db)
+    return mss.get_grateful_for()
+
+
+@tool
+def get_current_tasks() -> str:
+    """Useful when looking up a client's current tasks"""
+    with SessionLocal() as db:
+        mss = MindStateService(user_id=1, db=db)
+    return mss.get_current_tasks()
+
+
 tools = [
-    Tool(
-        name="Get Hopes And Dreams",
-        func=m_s_s.get_hopes_and_dreams(),
-        description="Useful when looking up the hopes and dreams of a client",
-    ),
-    Tool(
-        name="Get Skills And Achievements()",
-        func=m_s_s.get_skills_and_achievements(),
-        description="Useful when looking up the skills and achievements of a client",
-    ),
-    Tool(
-        name="Get Obstacles And Challenges",
-        func=m_s_s.get_obstacles_and_challenges(),
-        description="useful for when you need to look up a client's obstacles and challenges.",
-    ),
-    Tool(
-        name="Get Current Tasks",
-        func=m_s_s.get_current_tasks(),
-        description="useful for when you need to look up a client's current tasks.",
-    ),
-    Tool(
-        name="Get Grateful fo",
-        func=m_s_s.get_greatful_for(),
-        description="Useful when looking up what client is grateful for",
-    ),
+    get_hopes_and_dreams,
+    get_obstacles_and_challenges,
+    get_skills_and_achievements,
+    get_grateful_for,
+    get_skills_and_achievements,
 ]
+
 
 llm = ChatOpenAI(temperature=0)
 
@@ -63,6 +85,8 @@ prompt = OpenAIFunctionsAgent.create_prompt(system_message=system_message)
 
 agent = OpenAIFunctionsAgent(llm=llm, tools=tools, prompt=prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-agent_executor.run(
+agent_response = agent_executor.run(
     "Find out what the client is grateful for and create a guided visualisation exercise to reflect on these things "
 )
+
+print(agent_response)

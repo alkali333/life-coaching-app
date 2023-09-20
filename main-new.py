@@ -86,6 +86,7 @@ else:
         unsafe_allow_html=True,
     )
     st.write(f"{st.session_state.quote}")
+    st.title("Daily Suggestions")
 
     if "welcome_message" not in st.session_state:
         # sets the welcome message to generic or customised depending on if the user is new
@@ -97,9 +98,6 @@ else:
         else:
             #
             prompts = [
-                """Create an epic poem about the user as if they were a great warrior.
-                    Use the info you have along with a little humour. Give them hope that they
-                    can defeat their obstacles and manifest their hopes and dreams""",
                 """give the user 5 missions for today that will help them achieve their hopes and dreams, they can be small simple tasks""",
                 """Recommend 3 random life-coaching exercises that will help them based on the user info """,
                 """Offer the client some exercises they can do today to overcome their obstacles and challenges""",
@@ -123,9 +121,9 @@ else:
         else:
             st.session_state.current_question = 0
 
-    st.write(
-        f"debugging: current question is: {st.session_state.current_question} new user: {st.session_state.new_user}"
-    )
+    # st.write(
+    #     f"debugging: current question is: {st.session_state.current_question} new user: {st.session_state.new_user}"
+    # )
 
     if st.session_state.current_question == 0:
         st.write(
@@ -155,7 +153,7 @@ else:
                     response = input_summarizer.summarize(hopes_and_dreams)
 
                 st.session_state.mindstate_service.populate_mindstate(
-                    info=response.content,
+                    info=response,
                     column="hopes_and_dreams",
                 )
                 st.session_state.current_question = 2
@@ -179,7 +177,7 @@ else:
                     response = input_summarizer.summarize(skills_and_achievements)
 
                 st.session_state.mindstate_service.populate_mindstate(
-                    info=response.content,
+                    info=response,
                     column="skills_and_achievements",
                 )
                 st.session_state.current_question = 3
@@ -202,7 +200,7 @@ else:
                 input_summarizer = InputSummarizer()
                 response = input_summarizer.summarize(obstacles_and_challenges)
             st.session_state.mindstate_service.populate_mindstate(
-                info=response.content,
+                info=response,
                 column="obstacles_and_challenges",
             )
             print("Obstacles and challenges updated")
@@ -248,8 +246,21 @@ else:
     #
     ################## GRATITUDE JOURNAL
     if not st.session_state.new_user:
+        if "gratitude_message" not in st.session_state:
+            with st.spinner("Loading message... "):
+                response = st.session_state.life_coach.create_exercise(
+                    query="""
+                Encourage the client to reflect on things they are grateful for. This could be
+                tasks they have accomplished, people in their lives, things that have gone well,
+                any little things even. Make sure you encourage them to think creatively. Ask them
+                to choose at least 5 things. Keep this short (2-3 sentances)                           
+                """
+                )
+            st.session_state.gratitude_message = response
+
         with col3:
             st.subheader("Gratitude Journal")
+            st.write(st.session_state.gratitude_message)
             with SessionLocal() as session:
                 latest_entry = (
                     session.query(MindState.grateful_for)
@@ -262,6 +273,7 @@ else:
             )
 
             # Form to add new entries
+
             with st.form(key="gratitude_journal", clear_on_submit=True):
                 entry = st.text_area("Entry")
                 submit_button = st.form_submit_button(label="Submit")
@@ -277,8 +289,19 @@ else:
         #
         ################## CURRENT TASKS
         #
+        if "current_tasks_message" not in st.session_state:
+            with st.spinner("Loading message... "):
+                response = st.session_state.life_coach.create_exercise(
+                    query="""
+                Short paragraph reminding the user of their hopes and dreams, and encourage them to a few missions/tasks for to complete over the next day or so. 
+                Encourage them to choose tasks that will help towards their hopes and dreams, even if only small steps. Keep it short (2-3)                     
+                """
+                )
+            st.session_state.current_tasks_message = response
+
         with col4:
             st.subheader("Current Missions")
+            st.write(st.session_state.current_tasks_message)
             # Display existing data
             with SessionLocal() as session:
                 current_tasks = (
@@ -306,8 +329,9 @@ else:
     st.write("\n\n" * 11)
     st.write("-" * 777)
     if st.session_state.mindstate_service.was_updated_recently():
+        st.title("Daily Exercises")
         st.write(
-            f"Well done for keeping your gratitude journal and daily missions log up to date. You can now access the exercises and pep talks!"
+            f"Well done for keeping your gratitude journal and daily missions log up to date. You can now access the exercises and pep talks! Do at least 2 exercises per day."
         )
 
         text_placeholder = st.empty()
@@ -527,12 +551,42 @@ else:
         diary_submit_button = st.form_submit_button(label="Enter")
 
         if diary_submit_button:
+            input_summarizer = InputSummarizer()
+            with st.spinner("Reading your diary"):
+                summary = input_summarizer.summarize(
+                    text=diary_entry, mode="diary", user_name=st.session_state.user_name
+                )
             with SessionLocal() as session:
                 new_entry = Diary(
                     entry=diary_entry,
+                    summary=summary,
                     date=datetime.today().date(),
                     user_id=st.session_state.user_id,
                 )
                 session.add(new_entry)
                 session.commit()
             st.write("Diary Updated!")
+            with st.spinner("Analysing your diary"):
+                coach_response = st.session_state.life_coach.create_exercise(
+                    query=f"""Give your analysis of this diary entry with regard to the 
+                            info you have about this client, make suggestions. Address the client directly,
+                            don't sign off with "your name" or anything else. 
+                            "You are... " Diary Entry:{summary}"""
+                )
+                # st.write(coach_response)
+
+                audio_path = text_to_speech(
+                    user_id=st.session_state.user_id, text=coach_response
+                )
+
+            # Open the audio file using the returned path and play it in the placeholder
+            with open(audio_path, "rb") as audio_file:
+                audio_bytes = audio_file.read()
+                st.audio(audio_bytes, format="audio/mp3")
+
+            st.download_button(
+                label="Download",
+                data=file_bytes,
+                file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+                mime="audio/mpeg",
+            )

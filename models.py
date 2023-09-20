@@ -29,6 +29,7 @@ class Diary(Base):
     __tablename__ = "diary"
     id = Column(Integer, primary_key=True, index=True)
     entry = Column(String)
+    summary = Column(String)
     date = Column(Date)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
 

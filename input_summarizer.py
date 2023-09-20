@@ -21,10 +21,13 @@ class InputSummarizer:
               ["Overcoming Doubt and Procrastination", "strategy", "Address the root cause of doubting oneself"]]
               Limit to two methods / strategies for each task identified. Remove any numbers or headings
              \n\n"""
+        elif mode == "diary":
+            system_message = f"""You are a life coach. { user_name or "the client" } has written a diary entry. Please summarize the diary
+             in terms of what is going well and what is going not so well. Keep this short (1 sentance per issue) Create a numbered list of points. """
             # system_message = "Write a 2-3 sentance summary of the provided info"
         messages = [
             SystemMessage(content=system_message),
             HumanMessage(content=text),
         ]
 
-        return self.llm(messages)
+        return self.llm(messages).content

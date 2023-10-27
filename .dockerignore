@@ -1,3 +1,6 @@
+__pycache__
+Dockerfile
+Dockerfile.prod
 venv/
 .env
 *.mp3
@@ -6,5 +9,6 @@ venv/
 __pycache__
 *.ipynb
 *.sh
-*.jupyterlab-workspace
+
+
 

@@ -586,7 +586,7 @@ else:
 
             st.download_button(
                 label="Download",
-                data=file_bytes,
+                data=audio_bytes,
                 file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
                 mime="audio/mpeg",
             )

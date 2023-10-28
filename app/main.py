@@ -250,10 +250,8 @@ else:
             with st.spinner("Loading message... "):
                 response = st.session_state.life_coach.create_exercise(
                     query="""
-                Encourage the client to reflect on things they are grateful for. This could be
-                tasks they have accomplished, people in their lives, things that have gone well,
-                any little things even. Make sure you encourage them to think creatively. Ask them
-                to choose at least 5 things. Keep this short (2-3 sentances)                           
+                Write a single paragraph encouraging the client to reflect on things they are grateful for (things that have recently gone well, or general stuff) Make sure you encourage them to think creatively. Ask them
+                to choose at least 5 things.                     
                 """
                 )
             st.session_state.gratitude_message = response
@@ -293,8 +291,8 @@ else:
             with st.spinner("Loading message... "):
                 response = st.session_state.life_coach.create_exercise(
                     query="""
-                Short paragraph reminding the user of their hopes and dreams, and encourage them to a few missions/tasks for to complete over the next day or so. 
-                Encourage them to choose tasks that will help towards their hopes and dreams, even if only small steps. Keep it short (2-3)                     
+                Write a single paragraph reminding the user of their hopes and dreams, and encourage them to a few missions/tasks for to complete over the next day or so. 
+                Encourage them to choose tasks that will help towards their hopes and dreams, even if only small steps.                   
                 """
                 )
             st.session_state.current_tasks_message = response
@@ -408,7 +406,7 @@ else:
                 query = create_random_meditation("skills_and_achievements")
 
                 response = st.session_state.life_coach.create_exercise(query=query)
-                text_placeholder.write(f"Exercise: {response}")
+                # text_placeholder.write(f"Exercise: {response}")
                 audio_path = text_to_speech(
                     user_id=st.session_state.user_id, text=response
                 )
@@ -427,7 +425,7 @@ else:
                 query = create_random_meditation("empowerment")
 
                 response = st.session_state.life_coach.create_exercise(query=query)
-                text_placeholder.write(f"Exercise: {response}")
+                # text_placeholder.write(f"Exercise: {response}")
                 audio_path = text_to_speech(
                     user_id=st.session_state.user_id, text=response
                 )
@@ -446,7 +444,7 @@ else:
                 query = create_random_meditation("current_tasks")
 
                 response = st.session_state.life_coach.create_exercise(query=query)
-                text_placeholder.write(f"Exercise: {response}")
+                # text_placeholder.write(f"Exercise: {response}")
                 audio_path = text_to_speech(
                     user_id=st.session_state.user_id, text=response
                 )

@@ -13,8 +13,8 @@ RUN pip install --no-cache-dir -r r
 # Add the current directory contents into the container at /docker_app
 COPY ./app .
 
-# Expose port 8501 (default Streamlit port)
-EXPOSE 8501
+
+EXPOSE 3000
 
 # Run Streamlit app
-CMD streamlit run main.py
+CMD streamlit run main.py --server.port 3000

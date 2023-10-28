@@ -13,7 +13,7 @@ services:
       - ./init_scripts:/docker-entrypoint-initdb.d
   web:
     build: .
-    command: ["streamlit", "run", "main.py", "--server.port", "3000"]
+    command: ["streamlit", "run", "main.py", "--server.port", "8080"]
     volumes:
       - .:/app
     ports:

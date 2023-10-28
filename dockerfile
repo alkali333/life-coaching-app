@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r r
 COPY ./app .
 
 
-EXPOSE 3000
+EXPOSE 8080
 
 # Run Streamlit app
-CMD streamlit run main.py --server.port 3000
+CMD streamlit run main.py --server.port 8080

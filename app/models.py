@@ -55,6 +55,19 @@ if os.environ.get("SSLMODE") == "True":
 else:
     SQLALCHEMY_DATABASE_URL = f'postgresql://{os.getenv("DATABASE_USERNAME")}:{os.getenv("DATABASE_PASSWORD")}@{os.getenv("DATABASE_HOSTNAME")}:{os.getenv("DATABASE_PORT")}/{os.getenv("DATABASE_NAME")}'
 
+# Adjust these settings based on your requirements and observations
+pool_size = 10  # Maximum number of connections
+pool_timeout = 10  # Maximum time to wait for a connection
+pool_recycle = 3600  # Maximum age of connections in seconds
+
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    pool_size=pool_size,
+    pool_timeout=pool_timeout,
+    pool_recycle=pool_recycle,
+    pool_pre_ping=True,
+)
+
 engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -13,7 +13,7 @@ services:
   #   #  - ./init_scripts:/docker-entrypoint-initdb.d
   web:
     build: .
-    command: ["streamlit", "run", "main.py", "--server.port", "8080"]
+    command: ["streamlit", "run", "main.py", "--server.port ", "8080"]
     volumes:
       - .:/app
     ports:
@@ -26,3 +26,7 @@ services:
       DATABASE_HOSTNAME: db
       DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: ilovepostgress
+      OPENAI_API_KEY: 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
+      ELEVEN_LABS_API_KEY: 62f702b39fe5108dfa62d0cf3947485c
+      AWS_ACCESS_KEY_ID: AKIAWRDHJYIWZM66QX4M
+      AWS_SECRET_ACCESS_KEY: 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

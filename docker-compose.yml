@@ -9,8 +9,8 @@ services:
       POSTGRES_HOST_AUTH_METHOD: password
     ports: 
       - "5432:5432"
-    volumes:
-      - ./init_scripts:/docker-entrypoint-initdb.d
+  #   volumes:
+  #   #  - ./init_scripts:/docker-entrypoint-initdb.d
   web:
     build: .
     command: ["streamlit", "run", "main.py", "--server.port", "8080"]

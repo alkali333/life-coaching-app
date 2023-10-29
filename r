@@ -1,8 +1,8 @@
 boto3==1.28.71
 botocore==1.31.71
-ffmpeg
+ffmpeg==1.4
 langchain==0.0.323
-openai
+openai==0.27.8
 pandas==2.0.3
 psycopg2-binary
 pydub==0.25.1
@@ -10,5 +10,5 @@ python-dotenv==1.0.0
 SQLAlchemy==2.0.19
 streamlit==1.27.2
 Werkzeug==2.3.6
-
+requests==2.31.0
 

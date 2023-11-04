@@ -13,11 +13,11 @@ services:
   #   #  - ./init_scripts:/docker-entrypoint-initdb.d
   web:
     build: .
-    command: ["streamlit", "run", "main.py", "--server.port ", "8080"]
+    command: ["streamlit", "run", "main.py", "--server.port", "8080"]
     volumes:
       - .:/app
     ports:
-      - "8501:8501"
+      - "8080:8080"
     depends_on:
       - db
     environment:

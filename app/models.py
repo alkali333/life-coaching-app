@@ -6,6 +6,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import DateTime
 from dotenv import load_dotenv
 
+from db_helpers import retry_db_operation
+
 load_dotenv()
 
 
@@ -73,3 +75,21 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base.metadata.create_all(bind=engine)
+
+# Add default user
+
+with SessionLocal() as session:
+    # Check if the user with ID 1 exists
+    user_with_id_1 = session.query(Users).filter_by(id=1).first()
+
+    if user_with_id_1 is None:
+        # If default user doesn't exist, insert it
+        new_user = Users(
+            id=1,
+            name="Jake",
+            email="jake@alkalimedia.co.uk",
+            password="pbkdf2:sha256:600000$HfEqpWbeavZrTMNl$9d7177999ac36590ea40c868699a8a972315806961c68610950a4fa9ab540028",
+            is_new=1,
+        )
+
+        retry_db_operation(session, lambda: (session.add(new_user), session.commit()))

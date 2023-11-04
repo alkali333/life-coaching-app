@@ -53,24 +53,34 @@ class MindStateService:
             update_dict["timestamp"] = datetime.now()
 
         # attempt to update existing row
-        affected_rows = (
-            self.db.query(MindState)
-            .filter(MindState.user_id == self.user_id)
-            .update(update_dict)
-        )
+        for attempt in range(5):  # Limit to 5 attempts
+            try:
+                affected_rows = (
+                    self.db.query(MindState)
+                    .filter(MindState.user_id == self.user_id)
+                    .update(update_dict)
+                )
+                self.db.commit()
 
-        self.db.commit()
+                if affected_rows == 0:
+                    # if no rows were affected, create a new record
+                    new_mind_state = MindState(user_id=self.user_id, **update_dict)
+                    self.db.add(new_mind_state)
+                    self.db.commit()
 
-        if affected_rows == 0:
-            # if no rows were affected, create a new record
-            new_mind_state = MindState(user_id=self.user_id, **update_dict)
-            self.db.add(new_mind_state)
-            self.db.commit()
-
-        # Update the self.mind_state attribute
-        self.mind_state = (
-            self.db.query(MindState).filter(MindState.user_id == self.user_id).first()
-        )
+                # Update the self.mind_state attribute
+                self.mind_state = (
+                    self.db.query(MindState)
+                    .filter(MindState.user_id == self.user_id)
+                    .first()
+                )
+                break  # Break the loop if operation was successful
+            except (
+                Exception
+            ) as e:  # Catch all exceptions, you might want to narrow this down
+                print(f"Attempt {attempt + 1} failed with error: {e}")
+                if attempt == 4:  # After 5 attempts, re-raise the exception
+                    raise
 
         # return JSON of updated MindState
         return self.to_json() or ""

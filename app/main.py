@@ -17,7 +17,7 @@ from models import (
 )
 
 
-from db_helpers import authenticate
+from db_helpers import authenticate, retry_db_operation
 from life_coach import LifeCoach
 from mindstate_service import MindStateService
 from input_summarizer import InputSummarizer
@@ -52,18 +52,30 @@ if "user_id" not in st.session_state:
     email = st.sidebar.text_input("Email", value="")
     password = st.sidebar.text_input("Password", type="password")
 
+    # Define the options for the dropdown menu
+    options = ["Default", "Esoteric Alchemist", "Eastern Mystic", "Christian Crusader"]
+
+    # Create the dropdown widget in the sidebar
+    mode = st.sidebar.selectbox("Mode", options)
+
     if st.sidebar.button("Login"):
-        if authenticate(email, password):
+        with SessionLocal() as session:
+            authenticated = authenticate(session, Users, email, password)
+
+        if authenticated:
             # once authenticated we will store the user_id, user_name, mindstate_service, and life_coach
             # as session variables, and also determine if the user is new
             with SessionLocal() as session:
-                user_in_db = session.query(Users).filter_by(email=email).first()
+                user_in_db = retry_db_operation(
+                    session,
+                    lambda: session.query(Users).filter_by(email=email).first(),
+                )
 
-            st.session_state.user_id = user_in_db.id
-            # store user name
-            st.session_state.user_name = user_in_db.name
-            # record if the user is new
-            st.session_state.new_user = bool(user_in_db.is_new)
+                st.session_state.user_id = user_in_db.id
+                # store user name
+                st.session_state.user_name = user_in_db.name
+                # record if the user is new
+                st.session_state.new_user = bool(user_in_db.is_new)
 
             # store mindstate service (so we can update and display MindState)
             st.session_state.mindstate_service = MindStateService(
@@ -73,8 +85,22 @@ if "user_id" not in st.session_state:
             # load the mindstate as json string
             user_mindstate = st.session_state.mindstate_service.to_json()
 
-            # create lifecoach
-            st.session_state.life_coach = LifeCoach(user_mindstate)
+            # define the coach info strings
+            coach_info = {
+                "Default": "You are a life coach",
+                "Esoteric Alchemist": "You are a spiritual lifecoach drawing on hermeticism, western occultism, and alchemic scripture and philosopy",
+                "Eastern Mystic": "You are a spiritual lifecoach drawing on buddhist, hindu (including yogic), and taoist scripture and philosopy",
+                "Christian Crusader": "You are a Christian lifecoach, drawing on scripture and Christian theology",
+            }
+
+            # get the info string for the selected mode, or None if the mode is not found
+            info = coach_info[mode]
+
+            # debugging
+            print(f"Mode selected: {mode}")
+            print(f"Info sent to coach object: {info}")
+
+            st.session_state.life_coach = LifeCoach(user_mindstate, info)
 
         else:
             st.sidebar.text("Authentication failed. Please check your credentials.")
@@ -206,10 +232,11 @@ else:
             print("Obstacles and challenges updated")
             with SessionLocal() as session:
                 # Get the user instance
-                user = (
-                    session.query(Users)
+                user = retry_db_operation(
+                    session,
+                    lambda: session.query(Users)
                     .filter(Users.id == st.session_state.user_id)
-                    .one()
+                    .one(),
                 )
                 # reset the life coach to have the new info
                 refresh_life_coach()
@@ -217,14 +244,16 @@ else:
 
                 if user.is_new == 1:
                     print("User is new, setting user to not new....")
-                    user.is_new = 0
-                    session.commit()
+                    retry_db_operation(
+                        session, lambda: (setattr(user, "is_new", 0), session.commit())
+                    )
 
                     # Fetch the user again to confirm the update
-                    user_after_update = (
-                        session.query(Users)
+                    user_after_update = retry_db_operation(
+                        session,
+                        lambda: session.query(Users)
                         .filter(Users.id == st.session_state.user_id)
-                        .one()
+                        .one(),
                     )
                     if user_after_update.is_new == 0:
                         print("Successfully updated user to not new in the database.")
@@ -260,10 +289,11 @@ else:
             st.subheader("Gratitude Journal")
             st.write(st.session_state.gratitude_message)
             with SessionLocal() as session:
-                latest_entry = (
-                    session.query(MindState.grateful_for)
+                latest_entry = retry_db_operation(
+                    session,
+                    lambda: session.query(MindState.grateful_for)
                     .filter(MindState.user_id == st.session_state.user_id)
-                    .first()
+                    .first(),
                 )
 
             st.write(
@@ -302,10 +332,11 @@ else:
             st.write(st.session_state.current_tasks_message)
             # Display existing data
             with SessionLocal() as session:
-                current_tasks = (
-                    session.query(MindState.current_tasks)
+                current_tasks = retry_db_operation(
+                    session,
+                    lambda: session.query(MindState.current_tasks)
                     .filter(MindState.user_id == st.session_state.user_id)
-                    .first()
+                    .first(),
                 )
             st.write(
                 f"Your most recent entry: \n\n{current_tasks[0] or 'No entries yet! Please update to access them meditations'}"
@@ -343,7 +374,7 @@ else:
                 response = st.session_state.life_coach.create_exercise(query=query)
                 # text_placeholder.write(f"Exercise: {response}")
                 audio_path = text_to_speech(
-                    user_id=st.session_state.user_id, text=response
+                    user_id=st.session_state.user_id, text=response, speed=75
                 )
                 audio_placeholder.audio(audio_path)
                 with open(audio_path, "rb") as file:
@@ -369,7 +400,10 @@ else:
                 )
                 # text_placeholder.write(f"Exercise: {response}")
                 audio_path = text_to_speech(
-                    user_id=st.session_state.user_id, text=response
+                    user_id=st.session_state.user_id,
+                    text=response,
+                    speed=125,
+                    voice="Matthew",
                 )
                 audio_placeholder.audio(audio_path)
                 with open(audio_path, "rb") as file:
@@ -388,7 +422,7 @@ else:
                 response = st.session_state.life_coach.create_exercise(query=query)
                 # text_placeholder.write(f"Exercise: {response}")
                 audio_path = text_to_speech(
-                    user_id=st.session_state.user_id, text=response
+                    user_id=st.session_state.user_id, text=response, speed=75
                 )
                 audio_placeholder.audio(audio_path)
                 with open(audio_path, "rb") as file:
@@ -408,7 +442,7 @@ else:
                 response = st.session_state.life_coach.create_exercise(query=query)
                 # text_placeholder.write(f"Exercise: {response}")
                 audio_path = text_to_speech(
-                    user_id=st.session_state.user_id, text=response
+                    user_id=st.session_state.user_id, text=response, speed=75
                 )
                 audio_placeholder.audio(audio_path)
                 with open(audio_path, "rb") as file:
@@ -427,7 +461,7 @@ else:
                 response = st.session_state.life_coach.create_exercise(query=query)
                 # text_placeholder.write(f"Exercise: {response}")
                 audio_path = text_to_speech(
-                    user_id=st.session_state.user_id, text=response
+                    user_id=st.session_state.user_id, text=response, speed=75
                 )
                 audio_placeholder.audio(audio_path)
                 with open(audio_path, "rb") as file:
@@ -446,7 +480,7 @@ else:
                 response = st.session_state.life_coach.create_exercise(query=query)
                 # text_placeholder.write(f"Exercise: {response}")
                 audio_path = text_to_speech(
-                    user_id=st.session_state.user_id, text=response
+                    user_id=st.session_state.user_id, text=response, voice="Matthew"
                 )
                 audio_placeholder.audio(audio_path)
                 with open(audio_path, "rb") as file:
@@ -561,8 +595,8 @@ else:
                     date=datetime.today().date(),
                     user_id=st.session_state.user_id,
                 )
-                session.add(new_entry)
-                session.commit()
+                retry_db_operation(session, session.add, new_entry)
+
             st.write("Diary Updated!")
             with st.spinner("Analysing your diary"):
                 coach_response = st.session_state.life_coach.create_exercise(
@@ -582,9 +616,9 @@ else:
                 audio_bytes = audio_file.read()
                 st.audio(audio_bytes, format="audio/mp3")
 
-            st.download_button(
-                label="Download",
-                data=audio_bytes,
-                file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
-                mime="audio/mpeg",
-            )
+            # st.download_button(
+            #     label="Download",
+            #     data=audio_bytes,
+            #     file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+            #     mime="audio/mpeg",
+            # )

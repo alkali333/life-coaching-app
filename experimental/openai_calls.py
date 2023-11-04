@@ -22,3 +22,11 @@ def create_llm_content(template: str, user_variables: Dict[str, str] = None) -> 
             prompt = PromptTemplate(template=template, input_variables=input_variables)
             chain = LLMChain(llm=llm, prompt=prompt)
             return chain.run(user_variables)
+
+
+with SessionLocal() as session:
+    user_in_db = retry_db_operation(
+        session,
+        lambda: session.query(Users).filter_by(email=email).first(),
+    )
+    # Access user_in_db here while the session is still open.

@@ -20,22 +20,32 @@ class ChatModel(Protocol):
 
 load_dotenv()
 
-# test if asking with memory works if the LLM is stored in a session
-
 
 class LifeCoach:
     mindstate: str = "no mindstate initialised"
     llm: ChatModel
 
-    def __init__(self, mindstate: str, llm: ChatModel = None) -> None:
+    def __init__(
+        self,
+        mindstate: str,
+        coach_info: str = "You are a life coach",
+        llm: ChatModel = None,
+    ) -> None:
         self.mindstate = mindstate
         self.llm = llm or ChatOpenAI(
             model_name="gpt-3.5-turbo", temperature=0.7, max_tokens=1024
         )
+        self.coach_info = coach_info
 
     def create_exercise(
-        self, query: str, coach_info: str = "You are a life coach"
+        self,
+        query: str,
+        coach_info: str = None,
     ) -> str:
+        # use default coach info if not overridden
+        if not coach_info:
+            coach_info = self.coach_info
+
         # create system prompt
         prompt = PromptTemplate(
             template="""{coach_info}. You will be asked to create exercises for the user, based only on the information provided below in JSON. Use the client name (supplied below) to personalise the exercises.  \n\n
@@ -50,9 +60,14 @@ class LifeCoach:
             coach_info=coach_info, mindstate=self.mindstate
         )
 
+        # debugging
+        print(f"Prompt sent to LLM: {formatted_message}")
+
+        human_message = query + f" Remember {coach_info}"
+
         messages = [
             SystemMessage(content=str(formatted_message)),
-            HumanMessage(content=query),
+            HumanMessage(content=human_message),
         ]
 
         response = self.llm(messages)

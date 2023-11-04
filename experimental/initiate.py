@@ -91,3 +91,5 @@ prompt = create_random_prompt()
 response = my_life_coach.create_exercise(prompt)
 
 st.write(response.content)
+
+

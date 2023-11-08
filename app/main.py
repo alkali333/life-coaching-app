@@ -103,6 +103,8 @@ if "user_id" not in st.session_state:
             # get the info string for the selected mode, or None if the mode is not found
             info = coach_info[mode]
 
+            # Multi Language support will be added here.
+
             st.session_state.life_coach = LifeCoach(user_mindstate, info)
 
         else:

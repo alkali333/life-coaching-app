@@ -33,7 +33,7 @@ class LifeCoach:
     ) -> None:
         self.mindstate = mindstate
         self.llm = llm or ChatOpenAI(
-            model_name="gpt-3.5-turbo", temperature=0.7, max_tokens=1024
+            model_name="gpt-4-1106-preview", temperature=0.7, max_tokens=1024
         )
         self.coach_info = coach_info
 
@@ -59,9 +59,6 @@ class LifeCoach:
         formatted_message = prompt.format_prompt(
             coach_info=coach_info, mindstate=self.mindstate
         )
-
-        # debugging
-        print(f"Prompt sent to LLM: {formatted_message}")
 
         human_message = query + f" Remember {coach_info}"
 

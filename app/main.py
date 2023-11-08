@@ -53,7 +53,13 @@ if "user_id" not in st.session_state:
     password = st.sidebar.text_input("Password", type="password")
 
     # Define the options for the dropdown menu
-    options = ["Default", "Esoteric Alchemist", "Eastern Mystic", "Christian Crusader"]
+    options = [
+        "Default",
+        "Esoteric Alchemist",
+        "Eastern Mystic",
+        "Christian Crusader",
+        "Fairytale Dreamer",
+    ]
 
     # Create the dropdown widget in the sidebar
     mode = st.sidebar.selectbox("Mode", options)
@@ -91,14 +97,11 @@ if "user_id" not in st.session_state:
                 "Esoteric Alchemist": "You are a spiritual lifecoach drawing on hermeticism, western occultism, and alchemic scripture and philosopy",
                 "Eastern Mystic": "You are a spiritual lifecoach drawing on buddhist, hindu (including yogic), and taoist scripture and philosopy",
                 "Christian Crusader": "You are a Christian lifecoach, drawing on scripture and Christian theology",
+                "Fairytale Dreamer": "You are a life-coach who is also a magic talking hamster who draws from the mystical and magical worlds of Lord of the Rings, Star Wars, Harry Potter (using characters from them to explain your points). You also draw on the author Alexandre Jardin and the Philsopher Jean Jacques Rousseau  ",
             }
 
             # get the info string for the selected mode, or None if the mode is not found
             info = coach_info[mode]
-
-            # debugging
-            print(f"Mode selected: {mode}")
-            print(f"Info sent to coach object: {info}")
 
             st.session_state.life_coach = LifeCoach(user_mindstate, info)
 
@@ -152,6 +155,7 @@ else:
     # )
 
     if st.session_state.current_question == 0:
+        st.header("Repeat Questions (optional)")
         st.write(
             "Change is good. If you would like to tell me about yourself again, go ahead!"
         )
@@ -493,79 +497,113 @@ else:
                     mime="audio/mpeg",
                 )
 
-        ################## COACHING SESSIONS
+        ######## Custom Exercise
         #
 
         st.write("\n\n" * 11)
         st.write("-" * 777)
 
-        st.subheader("Plan Your Dreams")
+        st.subheader("Create your own exercise")
+        with st.form(key="custom_exercise", clear_on_submit=True):
+            custom_text = st.text_area(
+                "Tell me a goal, a challenge, or something you would like to work on and I will make a custom exercise for you"
+            )
+            custom_button = st.form_submit_button("Create!")
+        if custom_button:
+            query = custom_text
 
-        st.write("Goal Setting Exercise")
-
-        if "messages" not in st.session_state:
-            with st.form(key="goal_setting", clear_on_submit=True):
-                goal_string = st.text_area(
-                    "Enter a goal to get started. Use as much detail as you like."
-                )
-                goal_button = st.form_submit_button("Guide me to my goal!")
-        if goal_button:
-            st.session_state.messages = []
-
-            system_message = f"""You are a life coach, guiding a client, {st.session_state.user_name}, through a goal-setting exercise using the SMART framework.
-
-                The goal is:{goal_string}
-
-                You will guide the user through each of the 5 steps separately for their goal. So first you will ask them to make their goals specific and so on.
-                Once you have made the final summary of the SMART steps, don't ask any more questions but provide a lists of tasks for the user based on their responses and your insights """
-
-            st.session_state.messages.append(SystemMessage(content=system_message))
-            st.session_state.messages.append(HumanMessage(content="Let's get started"))
-
-            chat = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.7)
-
-            response = chat(st.session_state.messages)
-            st.session_state.messages.append(AIMessage(content=response.content))
-
-        # if the chat is going on
-        if "messages" in st.session_state:
-            # print the latest response
-            message_placeholder = st.empty()
-            audio_placeholder = st.empty()
-
-            with st.form(key="chat", clear_on_submit=True):
-                user_chat_input = st.text_area(label="Send a message")
-                chat_button = st.form_submit_button(label="Chat")
-
-            if chat_button and user_chat_input:
-                # append new input, get response, append chat response
-                st.session_state.messages.append(HumanMessage(content=user_chat_input))
-                chat = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.7)
-                response = chat(st.session_state.messages)
-                st.session_state.messages.append(AIMessage(content=response.content))
-
-            final_message = st.session_state.messages[-1].content
-            if len(st.session_state.messages) == 13:
-                final_message = (
-                    final_message
-                    + """ . Remember, you can add this list of suggestions to
-                    your current task diary above. Keep your diaries updated to access these coaching exercises."""
-                )
-
-            st.write(f"MESSAGE COUNTER: {len(st.session_state.messages)}")
-            message_placeholder.write(final_message)
-
+            custom_response = st.session_state.life_coach.create_exercise(
+                query=custom_text
+            )
+            # text_placeholder.write(f"Exercise: {response}")
             audio_path = text_to_speech(
-                user_id=st.session_state.user_id, text=final_message
+                user_id=st.session_state.user_id, text=custom_response
+            )
+            audio_placeholder.audio(audio_path)
+            with open(audio_path, "rb") as file:
+                file_bytes = file.read()
+
+            download_placeholder.download_button(
+                label="Download",
+                data=file_bytes,
+                file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+                mime="audio/mpeg",
             )
 
-            # Open the audio file using the returned path and play it in the placeholder
-            with open(audio_path, "rb") as audio_file:
-                audio_bytes = audio_file.read()
-                audio_placeholder.audio(audio_bytes, format="audio/mp3")
+        ################## COACHING SESSIONS
+        # Maybe no need for this in the app
+
+        # st.write("\n\n" * 11)
+        # st.write("-" * 777)
+
+        # st.subheader("Plan Your Dreams")
+
+        # st.write("Goal Setting Exercise")
+
+        # if "messages" not in st.session_state:
+        #     with st.form(key="goal_setting", clear_on_submit=True):
+        #         goal_string = st.text_area(
+        #             "Enter a goal to get started. Use as much detail as you like."
+        #         )
+        #         goal_button = st.form_submit_button("Guide me to my goal!")
+        # if goal_button:
+        #     st.session_state.messages = []
+
+        #     system_message = f"""You are a life coach, guiding a client, {st.session_state.user_name}, through a goal-setting exercise using the SMART framework.
+
+        #         The goal is:{goal_string}
+
+        #         You will guide the user through each of the 5 steps separately for their goal. So first you will ask them to make their goals specific and so on.
+        #         Once you have made the final summary of the SMART steps, don't ask any more questions but provide a lists of tasks for the user based on their responses and your insights """
+
+        #     st.session_state.messages.append(SystemMessage(content=system_message))
+        #     st.session_state.messages.append(HumanMessage(content="Let's get started"))
+
+        #     chat = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.7)
+
+        #     response = chat(st.session_state.messages)
+        #     st.session_state.messages.append(AIMessage(content=response.content))
+
+        # # if the chat is going on
+        # if "messages" in st.session_state:
+        #     # print the latest response
+        #     message_placeholder = st.empty()
+        #     audio_placeholder = st.empty()
+
+        #     with st.form(key="chat", clear_on_submit=True):
+        #         user_chat_input = st.text_area(label="Send a message")
+        #         chat_button = st.form_submit_button(label="Chat")
+
+        #     if chat_button and user_chat_input:
+        #         # append new input, get response, append chat response
+        #         st.session_state.messages.append(HumanMessage(content=user_chat_input))
+        #         chat = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.7)
+        #         response = chat(st.session_state.messages)
+        #         st.session_state.messages.append(AIMessage(content=response.content))
+
+        #     final_message = st.session_state.messages[-1].content
+        #     if len(st.session_state.messages) == 13:
+        #         final_message = (
+        #             final_message
+        #             + """ . Remember, you can add this list of suggestions to
+        #             your current task diary above. Keep your diaries updated to access these coaching exercises."""
+        #         )
+
+        #     st.write(f"MESSAGE COUNTER: {len(st.session_state.messages)}")
+        #     message_placeholder.write(final_message)
+
+        #     audio_path = text_to_speech(
+        #         user_id=st.session_state.user_id, text=final_message
+        #     )
+
+        #     # Open the audio file using the returned path and play it in the placeholder
+        #     with open(audio_path, "rb") as audio_file:
+        #         audio_bytes = audio_file.read()
+        #         audio_placeholder.audio(audio_bytes, format="audio/mp3")
 
     else:
         "Please make sure your gratitude diary and daily task list is up to date if you want access to the exercises and talks!"
+
     #
     ######## Dairy
     #

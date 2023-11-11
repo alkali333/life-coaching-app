@@ -25,7 +25,7 @@ from exercises import create_random_meditation
 from quotes import get_random_quote
 
 
-from polly import text_to_speech
+from polly import text_to_speech, text_to_speech_with_music
 
 
 load_dotenv(find_dotenv(), override=True)
@@ -56,7 +56,9 @@ if "user_id" not in st.session_state:
     options = [
         "Default",
         "Esoteric Alchemist",
-        "Eastern Mystic",
+        "Mountain Yogi",
+        "Taoist Master",
+        "Buddhist Monk",
         "Christian Crusader",
         "Fairytale Dreamer",
     ]
@@ -94,9 +96,13 @@ if "user_id" not in st.session_state:
             # define the coach info strings
             coach_info = {
                 "Default": "You are a life coach",
-                "Esoteric Alchemist": "You are a spiritual lifecoach drawing on hermeticism, western occultism, and alchemic scripture and philosopy",
-                "Eastern Mystic": "You are a spiritual lifecoach drawing on buddhist, hindu (including yogic), and taoist scripture and philosopy",
+                "Esoteric Alchemist": "You are a spiritual lifecoach drawing on hermeticism, western occultism, and alchemic scripture and philosopy, drawing on sources like The Kybalion, Corpus Hermetica, The Emerald Tablets, The Chymical Wedding of Christian Rosenkreutz, Atalanta Fugiens, Splendor Solis:",
+                "Mountain Yogi": "You are a spiritual lifecoach drawing on concepts from ancient Yogic texts like Yoga Sutras, Bhagavad Gita, Vivekachudamani, Ashtavakra Gita, Yoga Vasistha",
+                "Taoist Master": "You are a spiritual lifecoach who is a master of Taoist philosophy, drawing on texts such as Tao Te Ching, Chaung Tzu, Liezi Tzu, Hua Hu Ching, Wen-Tzu, I-Ching, Baopuzi",
+                "Buddhist Monk": "You are a spiritual lifecoach who is a Buddhist monk, providing wisdom from texts like: Dhammapada, Heart Sutra, Diamond Sutra, Bodhisattvacaryāvatāra, Majjhima Nikaya",
                 "Christian Crusader": "You are a Christian lifecoach, drawing on scripture and Christian theology",
+                # Maybe include apologists such as St Augustine, Thomas Acquinas, Blaise Pascal, C.S Lewis, G.K Chesterton, Francis Schaeffer
+                # Although perhaps better to stick to scripture.
                 "Fairytale Dreamer": "You are a life-coach who is also a magic talking hamster who draws from the mystical and magical worlds of Lord of the Rings, Star Wars, Harry Potter (using characters from them to explain your points). You also draw on the author Alexandre Jardin and the Philsopher Jean Jacques Rousseau  ",
             }
 
@@ -110,7 +116,7 @@ if "user_id" not in st.session_state:
         else:
             st.sidebar.text("Authentication failed. Please check your credentials.")
 else:
-    st.header("Atenshun v0.3 :black_heart: :brain: :old_key: ")
+    st.header("Atenshun v0.333 :black_heart: :brain: :old_key: ")
 
     st.write(
         f"<strong>Welcome, {st.session_state.user_name}!</strong>",
@@ -285,8 +291,7 @@ else:
             with st.spinner("Loading message... "):
                 response = st.session_state.life_coach.create_exercise(
                     query="""
-                Write a single paragraph encouraging the client to reflect on things they are grateful for (things that have recently gone well, or general stuff) Make sure you encourage them to think creatively. Ask them
-                to choose at least 5 things.                     
+                Write two short sentances encouraging client to write a list of five things they are grateful for (things that have recently gone well, or things they appreciate)                     
                 """
                 )
             st.session_state.gratitude_message = response
@@ -327,8 +332,7 @@ else:
             with st.spinner("Loading message... "):
                 response = st.session_state.life_coach.create_exercise(
                     query="""
-                Write a single paragraph reminding the user of their hopes and dreams, and encourage them to a few missions/tasks for to complete over the next day or so. 
-                Encourage them to choose tasks that will help towards their hopes and dreams, even if only small steps.                   
+                Write two short sentances encouraging the client to write 5 tasks that can contribute towards their hopes and dreams (list them).                   
                 """
                 )
             st.session_state.current_tasks_message = response
@@ -379,8 +383,11 @@ else:
                 query = create_random_meditation("misc")
                 response = st.session_state.life_coach.create_exercise(query=query)
                 # text_placeholder.write(f"Exercise: {response}")
-                audio_path = text_to_speech(
-                    user_id=st.session_state.user_id, text=response, speed=75
+                audio_path = text_to_speech_with_music(
+                    user_id=st.session_state.user_id,
+                    text=response,
+                    background_audio_path="./music/background.mp3",
+                    speed=75,
                 )
                 audio_placeholder.audio(audio_path)
                 with open(audio_path, "rb") as file:

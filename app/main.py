@@ -610,8 +610,10 @@ else:
                 query=custom_text
             )
             # text_placeholder.write(f"Exercise: {response}")
-            audio_path = text_to_speech(
-                user_id=st.session_state.user_id, text=custom_response
+            audio_path = text_to_speech_with_music(
+                user_id=st.session_state.user_id,
+                text=custom_response,
+                background_audio_path="./music/background.mp3",
             )
             audio_placeholder.audio(audio_path)
             with open(audio_path, "rb") as file:

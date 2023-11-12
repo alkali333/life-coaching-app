@@ -377,9 +377,12 @@ else:
         audio_placeholder = st.empty()
         download_placeholder = st.empty()
 
-        col5, col6, col7 = st.columns(3)
-        with col5:
-            if st.button("Random Exercise"):
+        col_left, col_center, col_right = st.columns(3)
+
+        # Display images in columns
+        with col_left:
+            st.image("./images/robot-light.jpg", use_column_width=True)
+            if st.button("Morning Meditation", use_container_width=True):
                 query = create_random_meditation("misc")
                 response = st.session_state.life_coach.create_exercise(query=query)
                 # text_placeholder.write(f"Exercise: {response}")
@@ -399,8 +402,34 @@ else:
                     file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
                     mime="audio/mpeg",
                 )
-        with col6:
-            if st.button("No Nonsense Pep Talk"):
+
+        with col_center:
+            st.image("./images/robot-dark.jpg", use_column_width=True)
+            if st.button("Evening Meditation", use_container_width=True):
+                query = create_random_meditation("any")
+                response = st.session_state.life_coach.create_exercise(query=query)
+                # text_placeholder.write(f"Exercise: {response}")
+                audio_path = text_to_speech_with_music(
+                    user_id=st.session_state.user_id,
+                    text=response,
+                    background_audio_path="./music/background.mp3",
+                    speed=75,
+                    voice="Amy",
+                )
+                audio_placeholder.audio(audio_path)
+                with open(audio_path, "rb") as file:
+                    file_bytes = file.read()
+
+                download_placeholder.download_button(
+                    label="Download",
+                    data=file_bytes,
+                    file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+                    mime="audio/mpeg",
+                )
+
+        with col_right:
+            st.image("./images/robot-megaphone.jpg", use_column_width=True)
+            if st.button("No Nonsense Pep Talk", use_container_width=True):
                 coach_info = """You are hard-hitting, no nonsense drill sergeant, like the one out of full metal jacket, very strict, you don't mince your words!
                                 You don't want your solider to end up as a pathetic loser, you are going to shout at them until they get their act together! 
                                 You will be asked to create exercises for the user, based only on the information provided below in JSON. Use their name in the exercises. """
@@ -415,7 +444,7 @@ else:
                 audio_path = text_to_speech(
                     user_id=st.session_state.user_id,
                     text=response,
-                    speed=125,
+                    speed=110,
                     voice="Matthew",
                 )
                 audio_placeholder.audio(audio_path)
@@ -428,83 +457,139 @@ else:
                     file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
                     mime="audio/mpeg",
                 )
-        with col7:
-            if st.button("Manifest Your Dreams"):
-                query = create_random_meditation("hopes_and_dreams")
 
-                response = st.session_state.life_coach.create_exercise(query=query)
-                # text_placeholder.write(f"Exercise: {response}")
-                audio_path = text_to_speech(
-                    user_id=st.session_state.user_id, text=response, speed=75
-                )
-                audio_placeholder.audio(audio_path)
-                with open(audio_path, "rb") as file:
-                    file_bytes = file.read()
+        text_placeholder = st.empty()
+        audio_placeholder = st.empty()
+        download_placeholder = st.empty()
 
-                download_placeholder.download_button(
-                    label="Download",
-                    data=file_bytes,
-                    file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
-                    mime="audio/mpeg",
-                )
-        col9, col10, col11 = st.columns(3)
-        with col9:
-            if st.button("Boost your self-esteem"):
-                query = create_random_meditation("skills_and_achievements")
+        # col5, col6, col7 = st.columns(3)
+        # with col5:
+        #     if st.button("Random Exercise"):
+        #         query = create_random_meditation("misc")
+        #         response = st.session_state.life_coach.create_exercise(query=query)
+        #         # text_placeholder.write(f"Exercise: {response}")
+        #         audio_path = text_to_speech_with_music(
+        #             user_id=st.session_state.user_id,
+        #             text=response,
+        #             background_audio_path="./music/background.mp3",
+        #             speed=75,
+        #         )
+        #         audio_placeholder.audio(audio_path)
+        #         with open(audio_path, "rb") as file:
+        #             file_bytes = file.read()
 
-                response = st.session_state.life_coach.create_exercise(query=query)
-                # text_placeholder.write(f"Exercise: {response}")
-                audio_path = text_to_speech(
-                    user_id=st.session_state.user_id, text=response, speed=75
-                )
-                audio_placeholder.audio(audio_path)
-                with open(audio_path, "rb") as file:
-                    file_bytes = file.read()
+        #         download_placeholder.download_button(
+        #             label="Download",
+        #             data=file_bytes,
+        #             file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+        #             mime="audio/mpeg",
+        #         )
+        # with col6:
+        #     if st.button("No Nonsense Pep Talk"):
+        #         coach_info = """You are hard-hitting, no nonsense drill sergeant, like the one out of full metal jacket, very strict, you don't mince your words!
+        #                         You don't want your solider to end up as a pathetic loser, you are going to shout at them until they get their act together!
+        #                         You will be asked to create exercises for the user, based only on the information provided below in JSON. Use their name in the exercises. """
 
-                download_placeholder.download_button(
-                    label="Download",
-                    data=file_bytes,
-                    file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
-                    mime="audio/mpeg",
-                )
-        with col10:
-            if st.button("Self-EMPOWERMENT!"):
-                query = create_random_meditation("empowerment")
+        #         query = """Create a motivational talk for the user, explaining them how important it is to get their current tasks done. Point out to them that the tasks
+        #             are essential if they are going to fulfill their hopes and dreams """
 
-                response = st.session_state.life_coach.create_exercise(query=query)
-                # text_placeholder.write(f"Exercise: {response}")
-                audio_path = text_to_speech(
-                    user_id=st.session_state.user_id, text=response, speed=75
-                )
-                audio_placeholder.audio(audio_path)
-                with open(audio_path, "rb") as file:
-                    file_bytes = file.read()
+        #         response = st.session_state.life_coach.create_exercise(
+        #             coach_info=coach_info, query=query
+        #         )
+        #         # text_placeholder.write(f"Exercise: {response}")
+        #         audio_path = text_to_speech(
+        #             user_id=st.session_state.user_id,
+        #             text=response,
+        #             speed=110,
+        #             voice="Matthew",
+        #         )
+        #         audio_placeholder.audio(audio_path)
+        #         with open(audio_path, "rb") as file:
+        #             file_bytes = file.read()
 
-                download_placeholder.download_button(
-                    label="Download",
-                    data=file_bytes,
-                    file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
-                    mime="audio/mpeg",
-                )
-        with col11:
-            if st.button("Get things done!"):
-                query = create_random_meditation("current_tasks")
+        #         download_placeholder.download_button(
+        #             label="Download",
+        #             data=file_bytes,
+        #             file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+        #             mime="audio/mpeg",
+        #         )
+        # with col7:
+        #     if st.button("Manifest Your Dreams"):
+        #         query = create_random_meditation("hopes_and_dreams")
 
-                response = st.session_state.life_coach.create_exercise(query=query)
-                # text_placeholder.write(f"Exercise: {response}")
-                audio_path = text_to_speech(
-                    user_id=st.session_state.user_id, text=response, voice="Matthew"
-                )
-                audio_placeholder.audio(audio_path)
-                with open(audio_path, "rb") as file:
-                    file_bytes = file.read()
+        #         response = st.session_state.life_coach.create_exercise(query=query)
+        #         # text_placeholder.write(f"Exercise: {response}")
+        #         audio_path = text_to_speech(
+        #             user_id=st.session_state.user_id, text=response, speed=75
+        #         )
+        #         audio_placeholder.audio(audio_path)
+        #         with open(audio_path, "rb") as file:
+        #             file_bytes = file.read()
 
-                download_placeholder.download_button(
-                    label="Download",
-                    data=file_bytes,
-                    file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
-                    mime="audio/mpeg",
-                )
+        #         download_placeholder.download_button(
+        #             label="Download",
+        #             data=file_bytes,
+        #             file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+        #             mime="audio/mpeg",
+        #         )
+        # col9, col10, col11 = st.columns(3)
+        # with col9:
+        #     if st.button("Boost your self-esteem"):
+        #         query = create_random_meditation("skills_and_achievements")
+
+        #         response = st.session_state.life_coach.create_exercise(query=query)
+        #         # text_placeholder.write(f"Exercise: {response}")
+        #         audio_path = text_to_speech(
+        #             user_id=st.session_state.user_id, text=response, speed=75
+        #         )
+        #         audio_placeholder.audio(audio_path)
+        #         with open(audio_path, "rb") as file:
+        #             file_bytes = file.read()
+
+        #         download_placeholder.download_button(
+        #             label="Download",
+        #             data=file_bytes,
+        #             file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+        #             mime="audio/mpeg",
+        #         )
+        # with col10:
+        #     if st.button("Self-EMPOWERMENT!"):
+        #         query = create_random_meditation("empowerment")
+
+        #         response = st.session_state.life_coach.create_exercise(query=query)
+        #         # text_placeholder.write(f"Exercise: {response}")
+        #         audio_path = text_to_speech(
+        #             user_id=st.session_state.user_id, text=response, speed=75
+        #         )
+        #         audio_placeholder.audio(audio_path)
+        #         with open(audio_path, "rb") as file:
+        #             file_bytes = file.read()
+
+        #         download_placeholder.download_button(
+        #             label="Download",
+        #             data=file_bytes,
+        #             file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+        #             mime="audio/mpeg",
+        #         )
+        # with col11:
+        #     if st.button("Get things done!"):
+        #         query = create_random_meditation("current_tasks")
+
+        #         response = st.session_state.life_coach.create_exercise(query=query)
+        #         # text_placeholder.write(f"Exercise: {response}")
+        #         audio_path = text_to_speech(
+        #             user_id=st.session_state.user_id, text=response, voice="Matthew"
+        #         )
+        #         audio_placeholder.audio(audio_path)
+        #         with open(audio_path, "rb") as file:
+        #             file_bytes = file.read()
+
+        #         download_placeholder.download_button(
+        #             label="Download",
+        #             data=file_bytes,
+        #             file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
+        #             mime="audio/mpeg",
+        #         )
 
         ######## Custom Exercise
         #

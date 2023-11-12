@@ -153,7 +153,7 @@ INSERT INTO public.users VALUES (1, 'Jake', 'jake@alkalimedia.co.uk', 'pbkdf2:sh
 INSERT INTO public.users VALUES (1, 'Selina', 'selina.walker@gmail.com', 'pbkdf2:sha256:600000$OBdDrv2lrMXszVr1$552becab72c322cda87c1646ef724dc36813237e9b939fce03faf1d418415b50', 1);
 INSERT INTO public.users VALUES (3, 'Jake', 'jake@test.com', 'pbkdf2:sha256:600000$PUtkv1TxmW5qnBmx$03eba1a6af86dd8532e97dd1c7c29e502a6c2d912e096ac9c416d5c3716225f0', 0);
 INSERT INTO public.users VALUES (5, 'Lindsay', 'lindsaykawecki@gmail.com', 'pbkdf2:sha256:600000$U5lNXWjiQUQ8zkly$142e60a4a6e2f6c233275e80604d1b2745fc9481b4449486a4b17e2ae679d7d6', 1);
-INSERT INTO public.users VALUES (1, 'Jake', 'jake@test.com', 'pbkdf2:sha256:600000$IKIQ1ix5NZA9wQPs$465a59503afd3fcb825f555fc1d86ee1e0f245e11e6635889283c65c6605b4b4', 1);
+INSERT INTO public.users VALUES (8, 'Aran', 'aranpraj@outlook.com', 'pbkdf2:sha256:600000$XDSVBHryi3cswdzD$8af2075f90807fcb05dcd89daf182f4245892ff2e1993c43f5b32e4a77cc8bbf', 1);
 
 --
 -- TOC entry 3352 (class 0 OID 0)

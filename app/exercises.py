@@ -77,10 +77,13 @@ def create_random_meditation(category) -> str:
         ],
     }
 
+    if category == "any":
+        all_exercises = []
+        for category_exercises in meditations.values():
+            all_exercises.extend(category_exercises)
+        return random.choice(all_exercises)
+
     if category not in meditations:
         raise ValueError("Invalid category provided.")
 
     return random.choice(meditations[category])
-
-
-# print(create_random_meditation("hopes_and_dreams"))

@@ -1,0 +1,7 @@
+[theme]
+primaryColor="#21BA45"  # A vibrant, futuristic green that suggests health and vitality.
+backgroundColor="#0F0F1F"  # A deep blue that evokes a sense of calm and the infinite, reminiscent of the night sky.
+secondaryBackgroundColor="#1F1F2F"  # A slightly lighter shade of blue for secondary containers and areas.
+textColor="#FFFFFF"  # White text for contrast and readability.
+font="sans-serif"  
+

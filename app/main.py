@@ -30,6 +30,9 @@ from polly import text_to_speech, text_to_speech_with_music
 
 load_dotenv(find_dotenv(), override=True)
 
+font_url = "https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+st.markdown(f'<link href="{font_url}" rel="stylesheet">', unsafe_allow_html=True)
+
 
 # used when database updated, this will get the latest user mindstate
 # and update the life_coach object
@@ -171,7 +174,7 @@ else:
             submit_button = st.form_submit_button("Tell me about yourself")
         if submit_button:
             st.session_state.current_question = 1
-            st.experimental_rerun()
+            st.rerun()
     if st.session_state.current_question == 1:
         with st.form(key="hopes", clear_on_submit=True):
             st.write(
@@ -195,7 +198,7 @@ else:
                     column="hopes_and_dreams",
                 )
                 st.session_state.current_question = 2
-                st.experimental_rerun()
+                st.rerun()
 
     elif st.session_state.current_question == 2:
         with st.form(key="skills", clear_on_submit=True):
@@ -219,7 +222,7 @@ else:
                     column="skills_and_achievements",
                 )
                 st.session_state.current_question = 3
-                st.experimental_rerun()
+                st.rerun()
 
     ### STEP THREE ###
     elif st.session_state.current_question == 3:
@@ -276,7 +279,7 @@ else:
                     print("User is already not new.")
 
                 st.session_state.current_question = 4
-                st.experimental_rerun()
+                st.rerun()
 
     elif st.session_state.current_question == 4:
         st.write(
@@ -323,7 +326,7 @@ else:
                             column="grateful_for",
                         )
                         refresh_life_coach()
-                        st.experimental_rerun()  # Rerun the app to refresh the data
+                        st.rerun()  # Rerun the app to refresh the data
 
         #
         ################## CURRENT TASKS
@@ -363,7 +366,7 @@ else:
                             column="current_tasks",
                         )
                         refresh_life_coach()
-                        st.experimental_rerun()  # Rerun the app to refresh the data
+                        st.rerun()  # Rerun the app to refresh the data
 
     st.write("\n\n" * 11)
     st.write("-" * 777)
@@ -707,52 +710,52 @@ else:
     st.write("\n\n" * 11)
     st.write("-" * 777)
 
+    left, right = st.columns(2)
     st.write(
-        """This is your diary, you can write whatever you want here. Thoughs, hopes, fears, your progress - random nonsense. 
-                Don't worry, you don't have to read it, but your army of AI coaches may take a look to keep you on track!"""
+        """This is your diary, use it to keep track of your progress. What has gone well lately? What has been challenging?
+    Enter your diary and I will analyse it for you."""
     )
 
-    with st.form(key="diary", clear_on_submit=True):
-        diary_entry = st.text_area("Entry")
-        diary_submit_button = st.form_submit_button(label="Enter")
+    diary_audio_placeholder = st.empty()
 
-        if diary_submit_button:
-            input_summarizer = InputSummarizer()
-            with st.spinner("Reading your diary"):
-                summary = input_summarizer.summarize(
-                    text=diary_entry, mode="diary", user_name=st.session_state.user_name
-                )
-            with SessionLocal() as session:
-                new_entry = Diary(
-                    entry=diary_entry,
-                    summary=summary,
-                    date=datetime.today().date(),
-                    user_id=st.session_state.user_id,
-                )
-                retry_db_operation(session, session.add, new_entry)
+    with left:
+        st.image(image="./images/robot-diary.jpg")
+    with right:
+        with st.form(key="diary", clear_on_submit=True):
+            diary_entry = st.text_area("Entry")
+            diary_submit_button = st.form_submit_button(label="Enter")
 
-            st.write("Diary Updated!")
-            with st.spinner("Analysing your diary"):
-                coach_response = st.session_state.life_coach.create_exercise(
-                    query=f"""Give your analysis of this diary entry with regard to the 
-                            info you have about this client, make suggestions. Address the client directly,
-                            don't sign off with "your name" or anything else. 
-                            "You are... " Diary Entry:{summary}"""
-                )
-                # st.write(coach_response)
+            if diary_submit_button:
+                input_summarizer = InputSummarizer()
+                with st.spinner("Reading your diary"):
+                    summary = input_summarizer.summarize(
+                        text=diary_entry,
+                        mode="diary",
+                        user_name=st.session_state.user_name,
+                    )
+                with SessionLocal() as session:
+                    new_entry = Diary(
+                        entry=diary_entry,
+                        summary=summary,
+                        date=datetime.today().date(),
+                        user_id=st.session_state.user_id,
+                    )
+                    retry_db_operation(session, session.add, new_entry)
 
-                audio_path = text_to_speech(
-                    user_id=st.session_state.user_id, text=coach_response
-                )
+                st.write("Diary Updated!")
+                with st.spinner("Analysing your diary"):
+                    coach_response = st.session_state.life_coach.create_exercise(
+                        query=f"""Give your analysis of this diary entry with regard to the 
+                                info you have about this client, make suggestions. Address the client directly,
+                                don't sign off with "your name" or anything else. 
+                                "You are... " Diary Entry:{summary}"""
+                    )
+                    # st.write(coach_response)
 
-            # Open the audio file using the returned path and play it in the placeholder
-            with open(audio_path, "rb") as audio_file:
-                audio_bytes = audio_file.read()
-                st.audio(audio_bytes, format="audio/mp3")
+                    audio_path = text_to_speech(
+                        user_id=st.session_state.user_id, text=coach_response
+                    )
 
-            # st.download_button(
-            #     label="Download",
-            #     data=audio_bytes,
-            #     file_name=f"random-{date.today().strftime('%Y-%m-%d')}.mp3",
-            #     mime="audio/mpeg",
-            # )
+                with open(audio_path, "rb") as audio_file:
+                    audio_bytes = audio_file.read()
+                    diary_audio_placeholder.audio(audio_bytes, format="audio/mp3")

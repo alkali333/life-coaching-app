@@ -13,6 +13,13 @@ COPY r .
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r r
 
+# Copy the config.toml file to the /.streamlit/ directory
+COPY config.toml /.streamlit/config.toml
+
+# Copy the "music" and "images" directories to the container
+COPY music ./music
+COPY images ./images
+
 # Add the current directory contents into the container at /docker_app
 COPY ./app .
 

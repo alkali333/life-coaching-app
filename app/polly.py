@@ -91,7 +91,7 @@ def text_to_speech_with_music(
     # Create a Polly client
     polly_client = boto3.Session(
         aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        aws_secret_access_key=os.getenv("AWS_SECRET"),
         region_name="ap-southeast-1",
     ).client("polly")
 

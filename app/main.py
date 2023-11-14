@@ -174,7 +174,7 @@ else:
             submit_button = st.form_submit_button("Tell me about yourself")
         if submit_button:
             st.session_state.current_question = 1
-            st.rerun()
+            st.experimental_rerun()
     if st.session_state.current_question == 1:
         with st.form(key="hopes", clear_on_submit=True):
             st.write(
@@ -198,7 +198,7 @@ else:
                     column="hopes_and_dreams",
                 )
                 st.session_state.current_question = 2
-                st.rerun()
+                st.experimental_rerun()
 
     elif st.session_state.current_question == 2:
         with st.form(key="skills", clear_on_submit=True):
@@ -222,7 +222,7 @@ else:
                     column="skills_and_achievements",
                 )
                 st.session_state.current_question = 3
-                st.rerun()
+                st.experimental_rerun()
 
     ### STEP THREE ###
     elif st.session_state.current_question == 3:
@@ -279,7 +279,7 @@ else:
                     print("User is already not new.")
 
                 st.session_state.current_question = 4
-                st.rerun()
+                st.experimental_rerun()
 
     elif st.session_state.current_question == 4:
         st.write(
@@ -326,7 +326,7 @@ else:
                             column="grateful_for",
                         )
                         refresh_life_coach()
-                        st.rerun()  # Rerun the app to refresh the data
+                        st.experimental_rerun()  # Rerun the app to refresh the data
 
         #
         ################## CURRENT TASKS
@@ -366,7 +366,7 @@ else:
                             column="current_tasks",
                         )
                         refresh_life_coach()
-                        st.rerun()  # Rerun the app to refresh the data
+                        st.experimental_rerun()  # Rerun the app to refresh the data
 
     st.write("\n\n" * 11)
     st.write("-" * 777)

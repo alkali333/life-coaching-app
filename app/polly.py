@@ -31,8 +31,8 @@ def text_to_speech(
         # Create a Polly client
         polly_client = boto3.Session(
             aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-            region_name="ap-southeast-1",
+            aws_secret_access_key=os.getenv("AWS_SECRET"),
+            region_name="us-east-1",
         ).client("polly")
 
         try:
@@ -92,7 +92,7 @@ def text_to_speech_with_music(
     polly_client = boto3.Session(
         aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
         aws_secret_access_key=os.getenv("AWS_SECRET"),
-        region_name="ap-southeast-1",
+        region_name="us-east-1",
     ).client("polly")
 
     for part in text_parts:

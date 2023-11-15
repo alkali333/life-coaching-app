@@ -174,10 +174,10 @@ else:
     if st.session_state.current_question == 0:
         st.header("Repeat Questions (optional)")
         st.write(
-            """At least once a week, answer the questions again from scratch. 
-            This is a powerful journaling exercise that will keep your mind focused on what 
-            it needs to be focused on. As your awareness increases, your goals, skills, and challenges
-            will become clearer, so the exercises will become even more powerful. """
+            """At least once a week, answer the questions again from scratch. \
+            This is a powerful journaling exercise that will keep your mind focused on what \
+            it needs to be focused on. As your awareness increases, your goals, skills, and challenges \
+            will become clearer, the exercises will become even more powerful. """
         )
         with st.form(key="start"):
             submit_button = st.form_submit_button("Tell me about yourself")
@@ -394,7 +394,7 @@ else:
     if st.session_state.mindstate_service.was_updated_recently():
         st.title("Daily Exercises")
         st.write(
-            f"Well done for keeping your gratitude journal and daily missions log up to date. You can now access the exercises and pep talks! Do at least 2 exercises per day."
+            f"Well done for keeping your gratitude journal and daily missions log up to date. You can now access the exercises!"
         )
 
         text_placeholder = st.empty()

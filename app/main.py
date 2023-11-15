@@ -30,8 +30,13 @@ from polly import text_to_speech, text_to_speech_with_music
 
 load_dotenv(find_dotenv(), override=True)
 
-font_url = "https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
-st.markdown(f'<link href="{font_url}" rel="stylesheet">', unsafe_allow_html=True)
+st.set_page_config(
+    page_title="Atenshun 0.333 | Mind Makes Magic",
+    page_icon=":rose:",
+    layout="centered",
+    initial_sidebar_state="auto",
+    menu_items=None,
+)
 
 
 # used when database updated, this will get the latest user mindstate
@@ -119,14 +124,14 @@ if "user_id" not in st.session_state:
         else:
             st.sidebar.text("Authentication failed. Please check your credentials.")
 else:
-    st.header("Atenshun v0.333 :black_heart: :brain: :old_key: ")
+    st.title("Atenshun v0.333 :black_heart: :brain: :old_key: ")
 
     st.write(
         f"<strong>Welcome, {st.session_state.user_name}!</strong>",
         unsafe_allow_html=True,
     )
     st.write(f"{st.session_state.quote}")
-    st.title("Daily Suggestions")
+    st.header("Daily Suggestions")
 
     if "welcome_message" not in st.session_state:
         # sets the welcome message to generic or customised depending on if the user is new
@@ -140,15 +145,16 @@ else:
             prompts = [
                 """give the user 5 missions for today that will help them achieve their hopes and dreams, they can be small simple tasks""",
                 """Recommend 3 random life-coaching exercises that will help them based on the user info """,
+                """Create a short adventure story where the client is the hero, use the client info.""",
                 """Offer the client some exercises they can do today to overcome their obstacles and challenges""",
                 """Write a humourous epic fantasy/sci-fi adventure in a world of talking animals, robots, 
                     technology and magic. Make the client the main character (pick an unusual animal with strange characteristics) is a story that has them use their skills
                     and achievements to overcome their obstacles and challenges and reach all their hopes and dreams""",
             ]
-
-            st.session_state.welcome_message = (
-                st.session_state.life_coach.create_exercise(random.choice(prompts))
-            )
+            with st.spinner("Loading your welcome message... "):
+                st.session_state.welcome_message = (
+                    st.session_state.life_coach.create_exercise(random.choice(prompts))
+                )
 
     st.write(st.session_state.welcome_message)
 
@@ -168,7 +174,10 @@ else:
     if st.session_state.current_question == 0:
         st.header("Repeat Questions (optional)")
         st.write(
-            "Change is good. If you would like to tell me about yourself again, go ahead!"
+            """At least once a week, answer the questions again from scratch. 
+            This is a powerful journaling exercise that will keep your mind focused on what 
+            it needs to be focused on. As your awareness increases, your goals, skills, and challenges
+            will become clearer, so the exercises will become even more powerful. """
         )
         with st.form(key="start"):
             submit_button = st.form_submit_button("Tell me about yourself")
@@ -178,7 +187,9 @@ else:
     if st.session_state.current_question == 1:
         with st.form(key="hopes", clear_on_submit=True):
             st.write(
-                "Let's get started. Tell me about your hopes and dreams. Don't be afraid to think big. Tell me at least 3."
+                """Tell me about some of your goals and dreams. \
+                Choose 3-4, and for each one tell me why it is important, and how you will feel \
+                when it is realised."""
             )
 
             hopes_and_dreams = st.text_area(
@@ -202,7 +213,11 @@ else:
 
     elif st.session_state.current_question == 2:
         with st.form(key="skills", clear_on_submit=True):
-            st.write("Tell me about your skills and achievements")
+            st.write(
+                """Tell me about some of your skills and achievements. These can be talents, personality attributes,\
+                  challenges you have overcome, education, work achievements or anything else.\
+                  What are you good at? What are you proud of?"""
+            )
 
             skills_and_achievements = st.text_area(
                 label="Your skills and achievements",
@@ -226,7 +241,12 @@ else:
 
     ### STEP THREE ###
     elif st.session_state.current_question == 3:
-        st.write("Tell me about your obstacles and challenges")
+        st.write(
+            """Tell me about some of the obstacles and challenges you are currently facing. \
+            For each one, tell me what you think is the cause of the issue, and how you will \
+            feel when it is overcome. """
+        )
+
         with st.form(key="obstacles", clear_on_submit=True):
             obstacles_and_challenges = st.text_area(
                 label="Your obstacles and challenges",
@@ -283,7 +303,8 @@ else:
 
     elif st.session_state.current_question == 4:
         st.write(
-            "Thanks for the info! Now start updating your gratitude diary and task list"
+            """Thanks for answering the questions. To access your meditation exercises,\
+              please fill out your gratitude diary and task list. """
         )
 
     col3, col4 = st.columns(2)
@@ -387,14 +408,16 @@ else:
             st.image("./images/robot-light.jpg", use_column_width=True)
             if st.button("Morning Meditation", use_container_width=True):
                 query = create_random_meditation("misc")
-                response = st.session_state.life_coach.create_exercise(query=query)
+                with st.spinner("Preparing your meditation..."):
+                    response = st.session_state.life_coach.create_exercise(query=query)
                 # text_placeholder.write(f"Exercise: {response}")
-                audio_path = text_to_speech_with_music(
-                    user_id=st.session_state.user_id,
-                    text=response,
-                    background_audio_path="./music/background.mp3",
-                    speed=75,
-                )
+                with st.spinner("Nearly done... "):
+                    audio_path = text_to_speech_with_music(
+                        user_id=st.session_state.user_id,
+                        text=response,
+                        background_audio_path="./music/background.mp3",
+                        speed=75,
+                    )
                 audio_placeholder.audio(audio_path)
                 with open(audio_path, "rb") as file:
                     file_bytes = file.read()
@@ -410,15 +433,17 @@ else:
             st.image("./images/robot-dark.jpg", use_column_width=True)
             if st.button("Evening Meditation", use_container_width=True):
                 query = create_random_meditation("any")
-                response = st.session_state.life_coach.create_exercise(query=query)
+                with st.spinner("Preparing your meditation..."):
+                    response = st.session_state.life_coach.create_exercise(query=query)
                 # text_placeholder.write(f"Exercise: {response}")
-                audio_path = text_to_speech_with_music(
-                    user_id=st.session_state.user_id,
-                    text=response,
-                    background_audio_path="./music/background.mp3",
-                    speed=75,
-                    voice="Amy",
-                )
+                with st.spinner("Nearly done..."):
+                    audio_path = text_to_speech_with_music(
+                        user_id=st.session_state.user_id,
+                        text=response,
+                        background_audio_path="./music/background.mp3",
+                        speed=75,
+                        voice="Amy",
+                    )
                 audio_placeholder.audio(audio_path)
                 with open(audio_path, "rb") as file:
                     file_bytes = file.read()
@@ -440,16 +465,18 @@ else:
                 query = """Create a motivational talk for the user, explaining them how important it is to get their current tasks done. Point out to them that the tasks
                     are essential if they are going to fulfill their hopes and dreams """
 
-                response = st.session_state.life_coach.create_exercise(
-                    coach_info=coach_info, query=query
-                )
+                with st.spinner("Preparing your pep talk..."):
+                    response = st.session_state.life_coach.create_exercise(
+                        coach_info=coach_info, query=query
+                    )
                 # text_placeholder.write(f"Exercise: {response}")
-                audio_path = text_to_speech(
-                    user_id=st.session_state.user_id,
-                    text=response,
-                    speed=110,
-                    voice="Matthew",
-                )
+                with st.spinner("Shut up and wait..."):
+                    audio_path = text_to_speech(
+                        user_id=st.session_state.user_id,
+                        text=response,
+                        speed=110,
+                        voice="Matthew",
+                    )
                 audio_placeholder.audio(audio_path)
                 with open(audio_path, "rb") as file:
                     file_bytes = file.read()
@@ -608,10 +635,10 @@ else:
             custom_button = st.form_submit_button("Create!")
         if custom_button:
             query = custom_text
-
-            custom_response = st.session_state.life_coach.create_exercise(
-                query=custom_text
-            )
+            with st.spinner("Creating your custom exercise... "):
+                custom_response = st.session_state.life_coach.create_exercise(
+                    query=custom_text
+                )
             # text_placeholder.write(f"Exercise: {response}")
             audio_path = text_to_speech_with_music(
                 user_id=st.session_state.user_id,
@@ -727,7 +754,7 @@ else:
 
             if diary_submit_button:
                 input_summarizer = InputSummarizer()
-                with st.spinner("Reading your diary"):
+                with st.spinner("Reading your diary..."):
                     summary = input_summarizer.summarize(
                         text=diary_entry,
                         mode="diary",
@@ -743,7 +770,7 @@ else:
                     retry_db_operation(session, session.add, new_entry)
 
                 st.write("Diary Updated!")
-                with st.spinner("Analysing your diary"):
+                with st.spinner("Analysing your diary..."):
                     coach_response = st.session_state.life_coach.create_exercise(
                         query=f"""Give your analysis of this diary entry with regard to the 
                                 info you have about this client, make suggestions. Address the client directly,

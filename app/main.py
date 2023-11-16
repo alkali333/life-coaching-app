@@ -19,7 +19,7 @@ from models import (
 
 
 from db_helpers import authenticate, retry_db_operation
-from utils import extract_dictionary
+from utils import extract_dictionary, display_image_if_exists
 from life_coach import LifeCoach
 from mindstate_service import MindStateService
 from input_summarizer import InputSummarizer
@@ -131,6 +131,9 @@ if "user_id" not in st.session_state:
             # get the info string for the selected mode, or None if the mode is not found
             info = coach_info[mode]
 
+            if "mode" not in st.session_state:
+                st.session_state.mode = mode
+
             # Multi Language support will be added here.
 
             st.session_state.life_coach = LifeCoach(user_mindstate, info)
@@ -138,13 +141,25 @@ if "user_id" not in st.session_state:
         else:
             st.sidebar.text("Authentication failed. Please check your credentials.")
 else:
-    st.title("Atenshun v0.333 :black_heart: :brain: :old_key: ")
+    l, r = st.columns(2)
 
-    st.write(
-        f"<strong>Welcome, {st.session_state.user_name}!</strong>",
-        unsafe_allow_html=True,
-    )
-    st.write(f"{st.session_state.quote}")
+    with l:
+        st.title("Atenshun v0.333 :black_heart: :brain: :old_key: ")
+        st.write(
+            f"<strong>Welcome, {st.session_state.user_name}!</strong>",
+            unsafe_allow_html=True,
+        )
+        st.write(f"{st.session_state.quote}")
+
+    with r:
+        selected_mode = st.session_state.mode
+
+        image_path = "./images/" + selected_mode.lower().replace(" ", "-") + ".jpg"
+        if display_image_if_exists(image_path, "Mode: " + selected_mode):
+            pass
+        else:
+            st.write(f"Mode: {selected_mode}")
+
     st.header("Daily Suggestions")
 
     if "welcome_message" not in st.session_state:
@@ -159,7 +174,7 @@ else:
                 """give the user 5 missions for today that will help them achieve their hopes and dreams, they can be small simple tasks""",
                 """Recommend 3 random life-coaching exercises that will help them based on the user info """,
                 """Create a short adventure story where the client is the hero, use the client info.""",
-                """Offer the client some exercises they can do today to overcome their obstacles and challenges""",
+                """Give the client a total of 9 positive affirmations based on their goals / skills / obstacles""",
                 """Write a humourous epic fantasy/sci-fi adventure in a world of talking animals, robots, 
                     technology and magic. Make the client the main character (pick an unusual animal with strange characteristics) is a story that has them use their skills
                     and achievements to overcome their obstacles and challenges and reach all their hopes and dreams""",
@@ -812,16 +827,16 @@ else:
     st.write("-" * 777)
 
     left, right = st.columns(2)
-    st.write(
-        """This is your diary, use it to keep track of your progress. What has gone well lately? What has been challenging?
-    Enter your diary and I will analyse it for you."""
-    )
 
     diary_audio_placeholder = st.empty()
 
     with left:
         st.image(image="./images/robot-diary.jpg")
     with right:
+        st.write(
+            """This is your diary, use it to keep track of your progress. What has gone well lately? What has been challenging?
+        Enter your diary and I will analyse it for you."""
+        )
         with st.form(key="diary", clear_on_submit=True):
             diary_entry = st.text_area("Entry")
             diary_submit_button = st.form_submit_button(label="Enter")

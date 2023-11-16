@@ -40,10 +40,17 @@ st.set_page_config(
 )
 
 
+# Can set debug mode in URL or .env
 if "DEBUG_MODE" not in st.session_state:
-    # Get DEBUG_MODE from environment, defaulting to 'false' if not set
     st.session_state["DEBUG_MODE"] = os.getenv("DEBUG_MODE", "false").lower() == "true"
-    print(f'debugging mode is {st.session_state["DEBUG_MODE"]}')
+
+    params = st.experimental_get_query_params()
+    if params:
+        if params.get("debug", [])[0] == "true":
+            st.session_state["DEBUG_MODE"] = "True"
+
+if st.session_state["DEBUG_MODE"]:
+    st.write("Debugging mode enabled")
 
 
 # used when database updated, this will get the latest user mindstate

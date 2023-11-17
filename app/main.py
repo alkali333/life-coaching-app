@@ -17,7 +17,6 @@ from models import (
     Diary,
 )
 
-
 from db_helpers import authenticate, retry_db_operation
 from utils import extract_dictionary, display_image_if_exists
 from life_coach import LifeCoach
@@ -83,6 +82,8 @@ if "user_id" not in st.session_state:
         "Buddhist Monk",
         "Christian Crusader",
         "Fairytale Dreamer",
+        "Kemetic Healer",
+        # add an astrologer who uses date.today()
     ]
 
     # Create the dropdown widget in the sidebar
@@ -126,6 +127,7 @@ if "user_id" not in st.session_state:
                 # Maybe include apologists such as St Augustine, Thomas Acquinas, Blaise Pascal, C.S Lewis, G.K Chesterton, Francis Schaeffer
                 # Although perhaps better to stick to scripture.
                 "Fairytale Dreamer": "You are a life-coach who is also a magic talking hamster who draws from the mystical and magical worlds of Lord of the Rings, Star Wars, Harry Potter (using characters from them to explain your points). You also draw on the author Alexandre Jardin and the Philsopher Jean Jacques Rousseau  ",
+                "Kemetic Healer": "You are a Kemetic life-coach, drawing on ancient wisdom such as The Egyptian book of the dead, The Pyramid Texts, The Mxims of Ptahhotep and the work of modern Kemetic teachers like Muata Ashby, Maulana Karenga, Sharon LaBorde. For the modern works, don't mention the authors names, just their ideas.  ",
             }
 
             # get the info string for the selected mode, or None if the mode is not found

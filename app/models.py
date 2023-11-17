@@ -55,7 +55,7 @@ class MindState(Base):
 # Check if 'DYNO' environment variable is set, as it is only set on Heroku
 if "DYNO" in os.environ:
     # The app is on Heroku, use the DATABASE_URL environment variable
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
+    SQLALCHEMY_DATABASE_URL = os.environ.get("DATABASE_URL")
 else:
     if os.environ.get("SSLMODE") == "True":
         SQLALCHEMY_DATABASE_URL = f'postgresql://{os.getenv("DATABASE_USERNAME")}:{os.getenv("DATABASE_PASSWORD")}@{os.getenv("DATABASE_HOSTNAME")}:{os.getenv("DATABASE_PORT")}/{os.getenv("DATABASE_NAME")}?sslmode=require'

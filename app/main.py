@@ -69,54 +69,31 @@ if "new_user" not in st.session_state:
     st.session_state.new_user = False
 
 
-if "user_id" not in st.session_state:
-    email = st.sidebar.text_input("Email", value="")
-    password = st.sidebar.text_input("Password", type="password")
+def handle_login(email, password, mode):
+    """This function logs the user in, initializes the mindstate, then
+    initializes the LifeCoach using the selected mode then reruns the app."""
 
-    # Define the options for the dropdown menu
-    options = [
-        "Default",
-        "Esoteric Alchemist",
-        "Mountain Yogi",
-        "Taoist Master",
-        "Buddhist Monk",
-        "Christian Crusader",
-        "Fairytale Dreamer",
-        "Kemetic Healer",
-        # add an astrologer who uses date.today()
-    ]
-
-    # Create the dropdown widget in the sidebar
-    mode = st.sidebar.selectbox("Mode", options)
-
-    if st.sidebar.button("Login"):
-        with SessionLocal() as session:
-            authenticated = authenticate(session, Users, email, password)
+    # Open a session for the whole authentication block
+    with SessionLocal() as session:
+        authenticated = authenticate(session, Users, email, password)
 
         if authenticated:
-            # once authenticated we will store the user_id, user_name, mindstate_service, and life_coach
-            # as session variables, and also determine if the user is new
-            with SessionLocal() as session:
-                user_in_db = retry_db_operation(
-                    session,
-                    lambda: session.query(Users).filter_by(email=email).first(),
-                )
-
-                st.session_state.user_id = user_in_db.id
-                # store user name
-                st.session_state.user_name = user_in_db.name
-                # record if the user is new
-                st.session_state.new_user = bool(user_in_db.is_new)
-
-            # store mindstate service (so we can update and display MindState)
-            st.session_state.mindstate_service = MindStateService(
-                user_id=st.session_state.user_id, db=session
+            user_in_db = retry_db_operation(
+                session,
+                lambda: session.query(Users).filter_by(email=email).first(),
             )
 
-            # load the mindstate as json string
+            st.session_state.user_id = user_in_db.id
+            st.session_state.user_name = user_in_db.name
+            st.session_state.new_user = bool(user_in_db.is_new)
+
+            # Make sure to use the existing session for MindStateService
+            st.session_state.mindstate_service = MindStateService(
+                user_id=user_in_db.id, db=session
+            )
             user_mindstate = st.session_state.mindstate_service.to_json()
 
-            # define the coach info strings
+            # Define your coach_info dictionary here
             coach_info = {
                 "Default": "You are a life coach",
                 "Esoteric Alchemist": "You are a spiritual lifecoach drawing on hermeticism, western occultism, and alchemic scripture and philosopy, drawing on sources like The Kybalion, Corpus Hermetica, The Emerald Tablets, The Chymical Wedding of Christian Rosenkreutz, Atalanta Fugiens, Splendor Solis:",
@@ -127,21 +104,43 @@ if "user_id" not in st.session_state:
                 # Maybe include apologists such as St Augustine, Thomas Acquinas, Blaise Pascal, C.S Lewis, G.K Chesterton, Francis Schaeffer
                 # Although perhaps better to stick to scripture.
                 "Fairytale Dreamer": "You are a life-coach who is also a magic talking hamster who draws from the mystical and magical worlds of Lord of the Rings, Star Wars, Harry Potter (using characters from them to explain your points). You also draw on the author Alexandre Jardin and the Philsopher Jean Jacques Rousseau  ",
-                "Kemetic Healer": "You are a Kemetic life-coach, drawing on ancient wisdom such as The Egyptian book of the dead, The Pyramid Texts, The Mxims of Ptahhotep and the work of modern Kemetic teachers like Muata Ashby, Maulana Karenga, Sharon LaBorde. For the modern works, don't mention the authors names, just their ideas.  ",
+                "Kemetic Healer": "You are a Kemetic life-coach, drawing on ancient wisdom such as The Egyptian book of the dead, The Pyramid Texts, The Mxims of Ptahhotep and the work of modern Kemetic teachers like Muata Ashby, Maulana Karenga, Sharon LaBorde. For the modern works, don't mention the authors names, just their ideas. No cliches like mummies etc  ",
             }
 
             # get the info string for the selected mode, or None if the mode is not found
             info = coach_info[mode]
-
-            if "mode" not in st.session_state:
-                st.session_state.mode = mode
-
-            # Multi Language support will be added here.
-
             st.session_state.life_coach = LifeCoach(user_mindstate, info)
+            st.session_state.mode = mode
+            st.experimental_rerun()
 
         else:
-            st.sidebar.text("Authentication failed. Please check your credentials.")
+            st.sidebar.error("Authentication failed. Please check your credentials.")
+
+
+# Define the options for the dropdown menu
+options = [
+    "Default",
+    "Esoteric Alchemist",
+    "Mountain Yogi",
+    "Taoist Master",
+    "Buddhist Monk",
+    "Christian Crusader",
+    "Fairytale Dreamer",
+    "Kemetic Healer",
+    # add an astrologer who uses date.today()
+]
+
+if "user_id" not in st.session_state:
+    with st.sidebar.form(key="login_form"):
+        email = st.text_input("Email", value="")
+        password = st.text_input("Password", type="password")
+        # Create the dropdown widget in the sidebar
+        mode = st.selectbox("Mode", options)
+
+        # Create a form and use the 'on_click' parameter to specify the callback function
+        login_button = st.form_submit_button(label="Login")
+    if login_button:
+        handle_login(email, password, mode)
 else:
     l, r = st.columns(2)
 
@@ -450,7 +449,9 @@ else:
                 "If you are looking for some missions to add to your list, I can suggest some for you."
             )
             if st.button("Suggest Missions"):
-                query = """Please give me 5 meditation exercises output as a python dictionary for example
+                query = """Please give me 7 missions for the user. These can be practical \
+                        tasks or exercises like meditation and journaling. \
+                        output as a python dictionary for example
                         {"Focused Breathing": "Take a deep breath and... "}
                         Only output the dictionary, no commentary or explanation"""
 
@@ -734,12 +735,12 @@ else:
                     custom_response = st.session_state.life_coach.create_exercise(
                         query=custom_text
                     )
-                # text_placeholder.write(f"Exercise: {response}")
-                audio_path = text_to_speech_with_music(
-                    user_id=st.session_state.user_id,
-                    text=custom_response,
-                    background_audio_path="./music/background.mp3",
-                )
+                with st.spinner("Nearly done... "):
+                    audio_path = text_to_speech_with_music(
+                        user_id=st.session_state.user_id,
+                        text=custom_response,
+                        background_audio_path="./music/background.mp3",
+                    )
                 audio_placeholder.audio(audio_path)
                 with open(audio_path, "rb") as file:
                     file_bytes = file.read()

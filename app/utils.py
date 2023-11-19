@@ -23,3 +23,20 @@ def display_image_if_exists(image_path, caption=None):
         return True
     else:
         return False
+
+
+def find_mp3_file(input_string):
+    # Convert the string to lowercase and replace spaces with underscores
+    formatted_string = input_string.lower().replace(" ", "_")
+
+    # Append ".mp3" to the formatted string
+    file_name = formatted_string + ".mp3"
+
+    # Construct the file path
+    file_path = os.path.join("./music", file_name)
+
+    # Check if the file exists
+    if os.path.exists(file_path):
+        return file_path
+    else:
+        return False

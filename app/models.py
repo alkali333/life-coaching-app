@@ -60,6 +60,8 @@ pool_size = 10  # Maximum number of connections
 pool_timeout = 10  # Maximum time to wait for a connection
 pool_recycle = 3600  # Maximum age of connections in seconds
 
+# Fix on Heroku which automatically generates the connection string but
+# with the wrong format
 if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
     SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace(
         "postgres://", "postgresql://", 1

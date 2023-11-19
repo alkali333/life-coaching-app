@@ -18,7 +18,7 @@ from models import (
 )
 
 from db_helpers import authenticate, retry_db_operation
-from utils import extract_dictionary, display_image_if_exists
+from utils import extract_dictionary, display_image_if_exists, find_mp3_file
 from life_coach import LifeCoach
 from mindstate_service import MindStateService
 from input_summarizer import InputSummarizer
@@ -102,7 +102,7 @@ def handle_login(email, password, mode):
 
             # Define your coach_info dictionary here
             coach_info = {
-                "Default": "You are a life coach",
+                "Default": "You are a spiritual life coach",
                 "Esoteric Alchemist": "You are a spiritual lifecoach drawing on hermeticism, western occultism, and alchemic scripture and philosopy, drawing on sources like The Kybalion, Corpus Hermetica, The Emerald Tablets, The Chymical Wedding of Christian Rosenkreutz, Atalanta Fugiens, Splendor Solis:",
                 "Mountain Yogi": "You are a spiritual lifecoach drawing on concepts from ancient Yogic texts like Yoga Sutras, Bhagavad Gita, Vivekachudamani, Ashtavakra Gita, Yoga Vasistha",
                 "Taoist Master": "You are a spiritual lifecoach who is a master of Taoist philosophy, drawing on texts such as Tao Te Ching, Chaung Tzu, Liezi Tzu, Hua Hu Ching, Wen-Tzu, I-Ching, Baopuzi",
@@ -110,7 +110,7 @@ def handle_login(email, password, mode):
                 "Christian Crusader": "You are a Christian lifecoach, drawing on scripture and Christian theology",
                 # Maybe include apologists such as St Augustine, Thomas Acquinas, Blaise Pascal, C.S Lewis, G.K Chesterton, Francis Schaeffer
                 # Although perhaps better to stick to scripture.
-                "Fairytale Dreamer": "You are a life-coach who is also a magic talking hamster who draws from the mystical and magical worlds of Lord of the Rings, Star Wars, Harry Potter (using characters from them to explain your points). You also draw on the author Alexandre Jardin and the Philsopher Jean Jacques Rousseau  ",
+                "Fairytale Dreamer": "You are a life-coach who is also a magic talking hamster who draws from the mystical and magical worlds of Lord of the Rings, Star Wars, The Legend of Zelda, Harry Potter (using characters from them to explain your points). You also draw on the author Alexandre Jardin and the Philsopher Jean Jacques Rousseau  ",
                 "Kemetic Healer": "You are a Kemetic life-coach, drawing on ancient wisdom such as The Egyptian book of the dead, The Pyramid Texts, The Mxims of Ptahhotep and the work of modern Kemetic teachers like Muata Ashby, Maulana Karenga, Sharon LaBorde. For the modern works, don't mention the authors names, just their ideas. No cliches like mummies etc  ",
             }
 
@@ -118,6 +118,12 @@ def handle_login(email, password, mode):
             info = coach_info[mode]
             st.session_state.life_coach = LifeCoach(user_mindstate, info)
             st.session_state.mode = mode
+            st.session_state.background_music = (
+                find_mp3_file(mode) or "./music/background.mp3"
+            )
+
+            print(f"Background Audio Path Is:{st.session_state.background_music}")
+
             st.experimental_rerun()
 
         else:
@@ -518,7 +524,7 @@ else:
                     audio_path = text_to_speech_with_music(
                         user_id=st.session_state.user_id,
                         text=response,
-                        background_audio_path="./music/background.mp3",
+                        background_audio_path=st.session_state.background_music,
                         speed=75,
                     )
                 audio_placeholder.audio(audio_path)
@@ -543,7 +549,7 @@ else:
                     audio_path = text_to_speech_with_music(
                         user_id=st.session_state.user_id,
                         text=response,
-                        background_audio_path="./music/background.mp3",
+                        background_audio_path=st.session_state.background_music,
                         speed=75,
                         voice="Amy",
                     )

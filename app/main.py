@@ -61,6 +61,13 @@ def refresh_life_coach():
         )
 
 
+def logout():
+    st.session_state.user_id = None
+
+
+if "user_id" not in st.session_state:
+    st.session_state.user_id = None
+
 # grab a quote
 if "quote" not in st.session_state:
     st.session_state.quote = get_random_quote()
@@ -130,7 +137,7 @@ options = [
     # add an astrologer who uses date.today()
 ]
 
-if "user_id" not in st.session_state:
+if not st.session_state.user_id:
     with st.sidebar.form(key="login_form"):
         email = st.text_input("Email", value="")
         password = st.text_input("Password", type="password")
@@ -739,6 +746,7 @@ else:
                     audio_path = text_to_speech_with_music(
                         user_id=st.session_state.user_id,
                         text=custom_response,
+                        speed=80,
                         background_audio_path="./music/background.mp3",
                     )
                 audio_placeholder.audio(audio_path)
@@ -882,3 +890,7 @@ else:
                     with open(audio_path, "rb") as audio_file:
                         audio_bytes = audio_file.read()
                         diary_audio_placeholder.audio(audio_bytes, format="audio/mp3")
+
+    st.write("\n\n" * 11)
+    st.write("-" * 777)
+    st.button(label="Log Out", on_click=logout)

@@ -122,8 +122,6 @@ def handle_login(email, password, mode):
                 find_mp3_file(mode) or "./music/background.mp3"
             )
 
-            print(f"Background Audio Path Is:{st.session_state.background_music}")
-
             st.experimental_rerun()
 
         else:
